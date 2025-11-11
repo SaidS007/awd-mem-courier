@@ -50,3 +50,9 @@ Voir le fichier [`LICENSE.txt`](./LICENSE.txt) pour plus de détails.
 
 Merci à l'équipe Maarch pour leur travail sur [Maarch Courrier](https://labs.maarch.org/maarch/MaarchCourrier), sur lequel ce projet est basé.
 
+## Installation
+
+Sur linux : sudo chmod +x deploy.sh && ./deploy.sh
+
+Sur Windows : .\deploy.bat
+         ou : .\deploy.ps1
