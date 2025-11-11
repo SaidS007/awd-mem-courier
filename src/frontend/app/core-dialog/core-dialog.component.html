@@ -1,0 +1,13 @@
+@if (!loadIcon) {
+  <div class="core-dialog" mat-dialog-content>
+    <mat-icon class="logo" svgIcon="memLogoFull"></mat-icon>
+    @if (!onError) {
+      <div class="loading-msg">{{ msg }}</div>
+    }
+    @if (onError) {
+      <app-maarch-message mode="danger">
+        <div [innerHTML]="onErrorMsg.idLang | translate :{errorContent:onErrorMsg.varContent}"></div>
+      </app-maarch-message>
+    }
+  </div>
+}

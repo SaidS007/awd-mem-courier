@@ -1,0 +1,31 @@
+<div class="editInProgress">
+  <div class="editInProgressMsg">
+    @if (editInProgress) {
+      <i class="fas fa-file-word bounce"></i>
+    }
+    @if (!editInProgress && !loading) {
+      <i class="fa-solid fa-check"></i>
+    }
+
+    @if (editInProgress) {
+      <div>
+        {{'lang.editInProgress' | translate}}
+      </div>
+    }
+    @if (!editInProgress && loading) {
+      <div style="font-weight: bold;">
+        {{'lang.' + 'environmentInitialize' | translate}}...
+      </div>
+    }
+    @if (!editInProgress && !loading) {
+      <div style="font-weight: bold;">
+        {{'lang.' + 'editionEnded' | translate}}
+      </div>
+    }
+  </div>
+  @if (!hideCancelButton) {
+    <div>
+      <button mat-button (click)="closeEditor()">{{'lang.cancel' | translate}}</button>
+    </div>
+  }
+</div>

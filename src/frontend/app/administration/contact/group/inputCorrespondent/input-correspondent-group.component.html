@@ -1,0 +1,28 @@
+<mat-form-field class="correspondentGroups" style="width: 100%;">
+  <mat-chip-list #chipList aria-label="correspondentGroups">
+    @for (item of correspondentGroups; track item) {
+      <mat-chip
+        [selectable]="true"
+        [removable]="item.canUpdateCorrespondents" (removed)="remove(item)">
+        <i class="correspondent-type-icon fas fa-atlas"></i>&nbsp;&nbsp;{{ item.label }}
+        @if (item.canUpdateCorrespondents) {
+          <mat-icon matChipRemove class="fa fa-times-circle"></mat-icon>
+        }
+      </mat-chip>
+    }
+    <input
+      #correspondentGroupsInput
+      [placeholder]="'lang.correspondentsGroups' | translate"
+      [formControl]="correspondentGroupsForm"
+      [matAutocomplete]="auto"
+      [matChipInputFor]="chipList"
+      [matChipInputSeparatorKeyCodes]="separatorKeysCodes">
+  </mat-chip-list>
+  <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">
+    @for (item of filteredcorrespondentGroups | async; track item) {
+      <mat-option [value]="item">
+        {{ item.label }}
+      </mat-option>
+    }
+  </mat-autocomplete>
+</mat-form-field>

@@ -1,0 +1,147 @@
+<div class="mat-dialog-content-container">
+  <h1 mat-dialog-title>{{data.action.label}}</h1>
+  <div id="modal-content" mat-dialog-content>
+    @if (loading) {
+      <div class="loading" style="display:flex;height:100%;">
+        <mat-spinner style="margin:auto;"></mat-spinner>
+      </div>
+    }
+    <div class="row">
+      <div class="col-md-12">
+        {{'lang.makeActionOn' | translate}}
+        @if (data.resIds.length === 0) {
+          <b
+          class="highlight primary">{{'lang.currentIndexingMail' | translate}}</b>
+        }
+        @if (data.resIds.length === 1) {
+          <b class="primary highlight">{{data.resource.chrono}}</b>
+        }
+        @if (data.resIds.length > 1) {
+          <b class="primary highlight">{{data.resIds.length}}
+          {{'lang.elements' | translate}}</b>
+          } ?
+          @if (acknowledgement.alreadySend?.number) {
+            <app-maarch-message mode="info">
+              <p>
+                <b>{{acknowledgement.alreadySend.number}}</b>&nbsp;<span [innerHTML]="'lang.arAlreadySend' | translate"></span> :
+              </p>
+              <div class="chronoList">
+                @for (info of acknowledgement.alreadySend.list | sortBy : 'alt_identifier'; track info) {
+                  <div style="text-decoration: underline;display: inline-block;">
+                    {{info.alt_identifier}}
+                  </div>
+                }
+              </div>
+            </app-maarch-message>
+          }
+          @if (acknowledgement.alreadyGenerated?.number) {
+            <app-maarch-message mode="info">
+              <p>
+                <b>{{acknowledgement.alreadyGenerated.number}}</b>&nbsp;<span [innerHTML]="'lang.arAlreadyGenerated' | translate"></span> :
+              </p>
+              @for (info of acknowledgement.alreadyGenerated.list; track info) {
+                <div style="text-decoration: underline;display: inline-block;">
+                  {{info.alt_identifier}}
+                </div>
+              }
+            </app-maarch-message>
+          }
+          @if (acknowledgement.noSendAR?.number) {
+            <app-maarch-message mode="info">
+              <p><b>{{acknowledgement.noSendAR.number}}</b>&nbsp;<span [innerHTML]="'lang.canNotSendAr' | translate"></span> :</p>
+              <div class="acknowledgementList">
+                @for (info of acknowledgement.noSendAR.list | sortBy : 'info'; track info) {
+                  <div class="chrono">
+                    {{info.alt_identifier !== null ? info.alt_identifier : 'lang.undefined' | translate}}
+                  </div>
+                  <div>
+                    {{info.info}}
+                  </div>
+                }
+              </div>
+            </app-maarch-message>
+          }
+          @if (acknowledgement.sendEmail) {
+            <app-maarch-message mode="success"
+              [content]="'lang.readyToSendElectronicAr' | translate : {nb : acknowledgement.sendEmail}">
+            </app-maarch-message>
+          }
+          @if (acknowledgement.sendPaper) {
+            <app-maarch-message mode="success"
+              [content]="'lang.readyToGeneratePaperAr' | translate : {nb : acknowledgement.sendPaper}">
+            </app-maarch-message>
+          }
+          <!--
+          EDISSYUM - NCH01 Correction envoi d'AR | ajout du <div ngIf="acknowledgement['sendPaper']"
+          Il faut mettre app-mail-editor et le mat-slide-toggle dans ce if là
+          -->
+          @if (!acknowledgement['sendPaper']) {
+            <div>
+              @if (!manualAR && realResSelected.length > 0) {
+                <app-mail-editor #appMailEditor
+                  [availableSenders]="senders"
+                  [currentSender]="senders[0]"
+                  [recipientDisabled]="true"
+                  [recipientHide]="data.resIds.length > 1 || !acknowledgement.sendEmail"
+                  [senderHide]="!acknowledgement.sendEmail"
+                  [recipientDisabled]="true"
+                  [senderDisabled]="senders.length === 1"
+                  [cCDisabled]="!canAddCopies"
+                  [cCIDisabled]="!canAddCopies"
+                  [attachmentsHide]="true"
+                  [bodyHide]="true"
+                  [subjectHide]="true"
+                  [resId]="data.resIds.length === 1 ? data.resIds[0] : null"
+                ></app-mail-editor>
+              }
+              @if (arMode === 'both') {
+                <div>
+                  <mat-slide-toggle [(ngModel)]="manualAR" class="primary" (change)="toggleArManual($event.checked)" style="margin-top: 12px;">
+                  {{'lang.editAcknowledgementReceipt' | translate}}</mat-slide-toggle>
+                </div>
+              }
+            </div>
+          }
+          @if (manualAR && realResSelected.length > 0) {
+            <app-mail-editor #appMailEditor
+              [availableSenders]="senders"
+              [currentSender]="senders[0]"
+              [recipientDisabled]="true"
+              [recipientHide]="data.resIds.length > 1 || !acknowledgement.sendEmail"
+              [senderHide]="!acknowledgement.sendEmail"
+              [senderDisabled]="senders.length === 1"
+              [cCDisabled]="!canAddCopies"
+              [cCIDisabled]="!canAddCopies"
+              [attachmentsHide]="true"
+              [resId]="data.resIds.length === 1 ? data.resIds[0] : null"
+              [subjectPrefix]="'[AR]'"
+            ></app-mail-editor>
+          }
+        </div>
+        @if (acknowledgement.sendEmail || acknowledgement.sendPaper) {
+          <div class="col-md-12">
+            <app-note-editor #noteEditor [resIds]="data.resIds"></app-note-editor>
+          </div>
+        }
+      </div>
+      @if (showToggle) {
+        <div class="row">
+          <div class="col-md-12" style="margin: 10px 0px 10px 0px;">
+            <mat-slide-toggle name="history" class="primary"
+              [title]="'lang.canGoToNextResDesc' | translate" [(ngModel)]="canGoToNextRes" [checked]="canGoToNextRes">
+              {{'lang.canGoToNextRes' | translate}}
+            </mat-slide-toggle>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
+      }
+    </div>
+    <span class="divider-modal"></span>
+    <div mat-dialog-actions class="actions">
+      <button mat-raised-button mat-button class="primary"
+        [disabled]="loading || (!acknowledgement.sendEmail && !acknowledgement.sendPaper)"
+      (click)="onSubmit()">{{'lang.validate' | translate}}</button>
+      <button mat-raised-button mat-button [disabled]="loading"
+      [mat-dialog-close]="">{{'lang.cancel' | translate}}</button>
+    </div>
+  </div>

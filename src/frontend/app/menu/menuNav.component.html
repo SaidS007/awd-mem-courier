@@ -1,0 +1,13 @@
+@if (router.url !== '/home' && router.url !== '/profile' && router.url !== '/about-us' && router.url !== '/administration' && router.url.indexOf('/basketList') === -1 && router.url !== '/followed') {
+  <mat-nav-list><!-- EDISSYUM - EME01 Ajout d'une fenêtre pour administrer la recherche des dossiers | supprimer && router.url.indexOf('/folders') == -1 -->
+    <button mat-list-item (click)="backClicked()">
+      <mat-icon mat-list-icon class="fa fa-chevron-left" style="color: #3A7C00"></mat-icon>
+      <p mat-line>
+        {{'lang.back' | translate}}
+      </p>
+    </button>
+  </mat-nav-list>
+}
+@if (router.url !== '/home' && router.url !== '/about-us' && router.url !== '/administration' && router.url.indexOf('/basketList') === -1 && router.url.indexOf('/folders') === -1) {
+  <mat-divider></mat-divider>
+}

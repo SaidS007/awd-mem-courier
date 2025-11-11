@@ -1,0 +1,25 @@
+:host {
+    display: contents;
+}
+
+.message-container {
+    background: var(--maarch-color-primary);
+    color: white;
+    box-shadow: none;
+    border: solid 2px white;
+    width: 100%;
+    border-radius: 20px;
+    min-height: 150px;
+}
+
+.message-content {
+    display: flex;
+    max-height: 250px;
+    overflow: auto;
+}
+
+.loader-container {
+    height: 90px;
+    display: flex;
+    align-items: center;
+}

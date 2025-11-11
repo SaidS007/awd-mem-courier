@@ -1,0 +1,148 @@
+<ng-container #myPlugin></ng-container>
+<div class="mat-dialog-content-container" style="max-height: 100vh;">
+  <h1 mat-dialog-title>
+    <span style="flex: 1;">
+      {{'lang.aboutUs' | translate}}
+    </span>
+    @if (!loading) {
+      <button [title]="'lang.close' | translate" mat-icon-button (click)="dialogRef.close();">
+        <mat-icon class="fa fa-times"></mat-icon>
+      </button>
+    }
+  </h1>
+  @if (loading) {
+    <div style="display:flex;height:100%;">
+      <mat-spinner style="margin:auto;"></mat-spinner>
+    </div>
+  }
+  @if (!loading) {
+    <mat-card mat-dialog-content class="card-app-content" style="min-height: 90% !important;">
+      <div class="col-sm-8">
+        <!-- EDISSYUM - NCH01 Rajout de la spécificité MEM dans l'affichage des versions | remplacement du h3 et du em -->
+        <!-- <h3>Maarch Courrier {{applicationVersion}} </h3> -->
+        <!-- <em>Version : <a target="blank" href="https://labs.maarch.org/maarch/MaarchCourrier/commit/{{commitHash}}">{{commitHash}}</a></em> -->
+        <h3>MEM Courrier version <b>{{applicationVersion}}</b></h3>
+        <em>Version : <a target="blank"
+        href="https://gitlab.com/edissyum/mem/2301/-/tags/{{applicationVersion}}">Lien vers le GitLab</a></em>
+        <h3>Notice de droit d’auteur Maarch Courrier :</h3>
+        <!-- END EDISSYUM - NCH01 -->
+        <div style="display: grid;grid-template-columns: 1fr 1fr;gap: 10px;">
+          @for (plugin of plugins; track plugin) {
+            <em>
+              <i class="fas fa-plug" style="color: #3A7C00"></i> {{ plugin.name }} <b>{{ plugin.version }}</b> {{ plugin.build }}
+            </em>
+          }
+        </div>
+        <hr />
+        <p><em>Copyright &copy; 2008-{{currentYear}} Maarch SAS {{'lang.groupeCompany' | translate}}</em></p>
+        <p>{{'lang.maarchLicence' | translate}}
+          <a target="blank" href="http://www.gnu.org/licenses/gpl-3.0-standalone.html">licence GNU GPLv3</a>.</p>
+          <div>
+            <ul>
+              <li>{{'lang.officialWebsite' | translate}} : <a target="blank" href="https://maarch.com/">https://maarch.com</a></li>
+            </ul>
+          </div>
+          <!-- EDISSYUM - NCH01 Rajout de la spécificité MEM dans l'affichage des versions -->
+          <p style="font-size: 20px;color: red;text-align: justify;">
+            {{ 'lang.memNoticeContent' | translate }}
+          </p>
+          <hr>
+            <h3>{{ 'lang.memLicenceTitle' | translate }} : </h3>
+            <p style="font-size: 18px; text-align: justify;">
+              {{ 'lang.memLicenceContent' | translate }}
+            </p>
+            <!-- END EDISSYUM - NCH01 -->
+            <h3>{{'lang.documentation' | translate}}</h3>
+            <a target="blank" href="https://edissyum.gitbook.io/guide-de-visite-mem-courrier" style="font-size: 20px; color:#3A7C00">Guide de visite MEM Courrier</a>
+            <hr />
+            <p>&nbsp;</p>
+            <h3>{{'lang.externalComponents' | translate}}</h3>
+            <hr />
+            <em>{{'lang.thanksToExtDev' | translate}}</em>
+            <p>&nbsp;</p>
+            <ul>
+              <li><a target="blank" href="https://angular.io/">Angular</a></li>
+              <li><a target="blank" href="https://material.angular.io/">Angular Material</a></li>
+              <li><a target="blank" href="http://getbootstrap.com/">Bootstrap</a></li>
+              <li><a target="blank" href="http://fortawesome.github.io/Font-Awesome/">Font Awesome</a></li>
+              <li><a target="blank" href="http://www.fpdf.org/">Fpdf</a></li>
+              <li><a target="blank" href="http://www.setasign.de/products/pdf-php-solutions/fpdi/">fpdi</a></li>
+              <li><a target="blank" href="https://jquery.com/">Jquery</a></li>
+              <li><a target="blank" href="https://github.com/running-coder/jquery-typeahead">Jquery Typeahead</a></li>
+              <li><a target="blank" href="https://github.com/Seldaek/monolog">Monolog</a></li>
+              <li><a target="blank" href="http://chir.ag/tech/download/pdfb">Pdfb</a></li>
+              <li><a target="blank" href="http://www.foolabs.com/xpdf/">Pdftotext</a></li>
+              <li><a target="blank" href="http://www.tinybutstrong.com/">Tiny But Strong</a></li>
+              <li><a target="blank" href="http://www.tinymce.com/">TinyMCE</a></li>
+              <li><a target="blank" href="http://framework.zend.com/">Zend Lucene Search</a></li>
+            </ul>
+          </div>
+          <div class="col-sm-4">
+            <h3>Crédits</h3>
+            <hr />
+            <ul>
+              <h4>Développeurs</h4>
+              <li>Joseph AKEL</li>
+              <li>Nicolas COUTURE</li>
+              <li>Jean-Laurent DUZANT</li>
+              <li>Guillaume HEURTIER</li>
+              <li>Hamza HRAMCHI</li>
+              <li>Nicolas LE BOZEC</li>
+              <li>Alex ORLUC</li>
+              <li>Sylvain WALTY</li>
+              <br>
+              </ul>
+              <ul>
+                <h4>Product Owners</h4>
+                <li>Cynthia APURA</li>
+                <li>Emmanuel DILLARD</li>
+              </ul>
+              <p>&nbsp;</p>
+              <ul>
+                <li><em>{{'lang.thanksToCommunity' | translate}}</em></li>
+              </ul>
+              <p>&nbsp;</p>
+              <div class="img_credits_maarch_box">
+                <mat-icon svgIcon="maarchBox" style="width: 100%;height: auto;"></mat-icon>
+              </div>
+              <!-- EDISSYUM - NCH01 Rajout de la spécificité MEM dans l'affichage des versions -->
+              <ul>
+                <h4>L'équipe EDISSYUM</h4>
+                <li>Nathan CHEVAL</li>
+                <li>Pierre-Yvon BEZERT</li>
+                <li>Oussama BRICH</li>
+                <li>Arthur MONDON</li>
+                <li>Yassine AADSSI</li>
+                <li>Serena TETART</li>
+                <li>Guillaume JEUDY</li>
+                <li>Ludovic SIRVENT</li>
+                <li>Ophélie BOUCQUEMONT</li>
+                <li>Allan ANTOINE</li>
+                <li>Thomas CARTELLIER</li>
+                <li>Cédric ROUIRE</li>
+                <li>Trinité ROUIRE</li>
+                <li>Said BELAOUNI</li>
+                <li>Gaël CORDON</li>
+                <li>Pierre-André MESTRE</li>
+                <li>Mickaël SANCHEZ</li>
+                <li>Adrian EVE</li>
+                <li>Amandine MILLET</li>
+                <li>Boris MARCELLIN</li>
+                <li>Simon SICCHIO</li>
+                <li>Andréa LOPEZ</li>
+                <li>Luc BERTON</li>
+                <li>Laurent BURY</li>
+                <li>Laéna DOMEAU</li>
+              </ul>
+              <br>
+                <br>
+                  <div class="img_credits_maarch_box">
+                    <img src="assets/logo_edissyum.png"  alt="Edissyum logo"/>
+                  </div>
+                  <br>
+                    <br>
+                      <!-- END EDISSYUM - NCH01 -->
+                    </div>
+                  </mat-card>
+                }
+              </div>

@@ -1,0 +1,34 @@
+@if (loading) {
+  <div class="loading">
+    <mat-spinner diameter="35"></mat-spinner>
+  </div>
+} @else {
+  @for (mail of mails; track mail) {
+    <div class="mailList">
+      @if (mail.status === 'SENT') {
+        <div class="date" [title]="mail.send_date | fullDate">
+          {{mail.send_date | timeAgo}}
+        </div>
+      } @else {
+        @if (mail.status === 'ERROR') {
+          <div class="error" [title]="mail.send_date | fullDate">
+            {{'lang.sendError' | translate}}
+          </div>
+        }
+      }
+      <div class="info" [class.arType]="mail.type === 'aknowledgement_receipt'" [innerHTML]="mail.object | shorten: 110: '...'">
+      </div>
+      <div class="date" [title]="mail.userInfo">
+        {{mail.userInfo}}
+      </div>
+    </div>
+  }
+  @if (mails.length === 3) {
+    <button mat-button class="showMore" (click)="showMore()">{{'lang.showMore' | translate}}</button>
+  }
+  @if (mails.length === 0) {
+    <div class="noData">
+      {{'lang.noSendmail' | translate}}
+    </div>
+  }
+}

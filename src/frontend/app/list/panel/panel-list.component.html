@@ -1,0 +1,44 @@
+@if (currentResource.resId !== undefined) {
+  <div style="font-size: 60px;opacity: 0.1;padding-bottom: 30px;text-align: center;">
+    <mat-icon fontSet="fas" fontIcon="{{icon}} fa-2x"></mat-icon>
+  </div>
+  <div
+    style="position: sticky;top: 0px;background:white;z-index: 1;display:flex;justify-content: center;align-items: center;color: #666;padding: 10px;">
+    @if (this.currentResource.statusImage !== undefined) {
+      <mat-icon style="width: auto;color: #3A7C00"
+        [ngStyle]="{'color': this.currentResource.priorityColor}"
+        class="{{this.currentResource.statusImage.charAt(0)}}{{this.currentResource.statusImage.charAt(1)}} {{this.currentResource.statusImage}} {{this.currentResource.statusImage.charAt(0)}}{{this.currentResource.statusImage.charAt(1)}}-2x">
+      </mat-icon>
+      }&nbsp;<span [innerHTML]="this.currentResource.chrono"></span>
+    </div>
+    <div style="text-align: center;font-weight: bold;margin-bottom: 30px;padding-left: 10px;padding-right: 10px;"
+      title="{{this.currentResource.subject | stripTags}}" [innerHTML]="this.currentResource.subject | shorten: 50: '...'">
+    </div>
+    @if (this.mode === 'diffusion') {
+      <mat-tab-group [(selectedIndex)]="selectedDiffusionTab" class="diffusionTab">
+        <mat-tab label="{{'lang.diffusionList' | translate}}">
+          <app-diffusions-list #appDiffusionsList [adminMode]="false"></app-diffusions-list>
+        </mat-tab>
+        <mat-tab label="{{'lang.visaWorkflow' | translate}}" [disabled]="appVisaWorkflow.getVisaCount() === 0">
+          <app-visa-workflow #appVisaWorkflow [adminMode]="false" [injectDatas]="injectDatasParam"></app-visa-workflow>
+        </mat-tab>
+        <mat-tab label="{{'lang.avis' | translate}}" [disabled]="appAvisWorkflow.getAvisCount() === 0">
+          <app-avis-workflow #appAvisWorkflow [adminMode]="false" [injectDatas]="injectDatasParam"></app-avis-workflow>
+        </mat-tab>
+      </mat-tab-group>
+    }
+    @if (this.mode === 'note') {
+      <app-notes-list #appNotesList [editMode]="true" [injectDatas]="injectDatasParam"
+      (reloadBadgeNotes)="reloadBadgeNotes($event)"></app-notes-list>
+    }
+    @if (this.mode === 'attachment') {
+      <app-attachments-list #appAttachmentsList [injectDatas]="injectDatasParam"
+      (reloadBadgeAttachments)="reloadBadgeAttachments($event)"></app-attachments-list>
+    }
+    @if (this.mode === 'sentResources') {
+      <app-sent-resource-list #sentResourceListComponent
+        [editMode]="true" [injectDatas]="injectDatasParam" [resId]="currentResource.resId"
+        (reloadBadgeSentResource)="reloadBadgeSentResources($event)">
+      </app-sent-resource-list>
+    }
+  }

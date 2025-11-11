@@ -1,0 +1,65 @@
+<div class="mat-dialog-content-container">
+  <h1 mat-dialog-title>{{data.action.label}}</h1>
+  <div mat-dialog-content>
+    @if (loading) {
+      <div class="loading" style="display:flex;height:100%;">
+        <mat-spinner style="margin:auto;"></mat-spinner>
+      </div>
+    }
+    <div class="row">
+      @if (fillMandatoryFields.length > 0) {
+        <div class="col-md-12">
+          @if (data.resIds.length > 1) {
+            <div class="alert-message alert-message-info mailList" role="alert">
+              <p>{{'lang.updateFieldsForMails' | translate}} :</p>
+              <ul>
+                @for (fillFields of fillMandatoryFields; track fillFields) {
+                  <li>
+                    <b>{{fillFields.chrono}}</b> : {{fillFields.fields}}
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+          @if (data.resIds.length < 2) {
+            <div class="alert-message alert-message-info mailList" role="alert">
+              <p [innerHTML]="'lang.updateFieldsForMail' | translate : {fields : fillMandatoryFields[0].fields}"></p>
+            </div>
+          }
+        </div>
+      }
+      <div class="col-md-12">
+        {{'lang.makeActionOn' | translate}}
+        @if (data.resIds.length === 0) {
+          <b class="primary highlight">{{'lang.currentIndexingMail' | translate}}</b>
+        }
+        @if (data.resIds.length === 1) {
+          <b class="primary highlight">{{data.resource.chrono}}</b>
+        }
+        @if (data.resIds.length > 1) {
+          <b class="primary highlight">{{data.resIds.length}} {{'lang.elements' | translate}}</b>
+          } ?
+        </div>
+        <div class="col-md-12" [class.hide]="data.fromSearch"> <!-- EDISSYUM - NCH01 Rajout de l'export PESv2 dans la recherche. Rajout du class.hide -->
+          <app-note-editor #noteEditor [resIds]="data.resIds"></app-note-editor>
+        </div>
+      </div>
+      @if (showToggle) {
+        <div class="row">
+          <div class="col-md-12" style="margin: 10px 0px 10px 0px;">
+            <mat-slide-toggle name="history" class="primary"
+              [title]="'lang.canGoToNextResDesc' | translate" [(ngModel)]="canGoToNextRes" [checked]="canGoToNextRes">
+              {{'lang.canGoToNextRes' | translate}}
+            </mat-slide-toggle>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
+      }
+    </div>
+    <span class="divider-modal"></span>
+    <div mat-dialog-actions class="actions">
+      <button mat-raised-button mat-button class="primary" [disabled]="loading" (click)="onSubmit()">{{'lang.validate' | translate}}</button>
+      <button mat-raised-button mat-button [disabled]="loading" [mat-dialog-close]="">{{'lang.cancel' | translate}}</button>
+    </div>
+  </div>
+

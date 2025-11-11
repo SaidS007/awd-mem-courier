@@ -1,0 +1,205 @@
+<div class="mat-dialog-content-container">
+  <h1 mat-dialog-title class="externalSignatoryBookTitle">
+    {{data.action?.label}} &nbsp; @if (authService.externalSignatoryBook !== null) {
+    <div class="badge" [title]="'lang.enabledSignatoryBook' | translate">
+      {{getTitle()}}
+    </div>
+  }
+</h1>
+<div mat-dialog-content>
+  @if (loading || finalLoading) {
+    <div class="loading" style="display:flex;height:100%;"> <!-- EDISSYUM - (AMI01 + AMO01) Intégration fiche de liaison au parapheur externe - Ajout finalLoading dans *ngIf -->
+      <mat-spinner style="margin:auto;"></mat-spinner>
+    </div>
+  }
+  @if (!functions.empty(authService.externalSignatoryBook)) {
+    <mat-sidenav-container autosize style="height:100%;">
+      <mat-sidenav-content style="background: white;" [ngStyle]="{'width': data.resIds.length === 1 ? '580px' : ''}">
+        <div class="row" style="margin: 0;">
+          <div class="col-md-12">
+            {{'lang.makeActionOn' | translate}}
+            @if (data.resIds.length === 0) {
+              <b
+              class="highlight primary">{{'lang.currentIndexingMail' | translate}}</b>
+            }
+            @if (data.resIds.length === 1) {
+              <b
+              class="highlight primary">{{data.resource.chrono}}</b>
+            }
+            @if (data.resIds.length > 1) {
+              <b class="primary highlight">{{data.resIds.length}}
+              {{'lang.elements' | translate}}</b>
+              } ?
+            </div>
+            @if (data.resIds.length === 1) {
+              <div class="toggleIntegration">
+                @if (data.resIds.length === 1) {
+                  <button class="attachmentIcon primary"
+                    mat-icon-button [title]="getIntegratedAttachments() + ' ' + ('lang.attachmentsInSignatoryBook' | translate)"
+                    (click)="onSidenavStateChanged()">
+                    <mat-icon fontSet="fas"
+                      [matBadge]="getIntegratedAttachments()"
+                      fontIcon="fa-paperclip fa-2x">
+                    </mat-icon>
+                  </button>
+                }
+                @for (inteKey of integrationsInfo | keyvalue; track inteKey) {
+                  <mat-checkbox class="primary"
+                    (click)="toggleIntegration(inteKey.key)"
+                    [checked]="data.resource.integrations[inteKey.key]">{{'lang.' + inteKey.key + '_doc' | translate}}
+                  </mat-checkbox>
+                }
+              </div>
+            }
+            <!-- EDISSYUM - (AMI01 + AMO01) Intégration fiche de liaison au parapheur externe -->
+            @if (data.resIds.length === 1) {
+              <div class="toggleIntegration">
+                @if (data.resIds.length === 1 && sendSummarySheet) {
+                  <button class="attachmentIcon primary"
+                    mat-icon-button title="{{'lang.summarySheetsUpdate' | translate}}"
+                    (click)="openSummarySheet()"
+                    >
+                    <mat-icon fontSet="fas"
+                      fontIcon="fa-pen-to-square fa-2x">
+                    </mat-icon>
+                  </button>
+                }
+                <mat-checkbox class="primary"
+                  [checked]="sendSummarySheet" (change)="sendSummarySheet = $event.checked">{{'lang.inSignatureBook_summarySheet' | translate}}
+                </mat-checkbox>
+                @if (((this.sendSummarySheet && !this.summarySheet))) {
+                  <div class="col-md-12">
+                    <div class="alert-message alert-message-danger" role="alert">
+                      <p class="m">
+                        {{'lang.completeSummarySheet' | translate}}
+                      </p>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+            <!-- END EDISSYUM - (AMI01 + AMO01) -->
+            @if (resourcesMailing.length > 0) {
+              <div class="alert-message alert-message-info" role="alert">
+                <p>{{'lang.mailingActionInformations' | translate}}</p>
+                <ul>
+                  @for (ressource of resourcesMailing; track ressource) {
+                    <li>
+                      <b>{{ressource.alt_identifier}}</b>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+            <div>
+              @if (authService.externalSignatoryBook.id === 'iParapheur' && !loading) {
+                <app-i-paraph #iParapheur
+                  [additionalsInfos]="additionalsInfos"
+                  [externalSignatoryBookDatas]="externalSignatoryBookDatas">
+                </app-i-paraph>
+                } <!-- EDISSYUM - PYB01 Ajout du connecteur pastell | Remplacer ['iParapheur', 'pastell'].indexOf(authService.externalSignatoryBook.id) > -1 par authService.externalSignatoryBook.id === 'iParapheur' -->
+                @if (authService.externalSignatoryBook.id === 'ixbus' && !loading) {
+                  <app-ixbus-paraph #ixbus
+                    [additionalsInfos]="additionalsInfos"
+                    [externalSignatoryBookDatas]="externalSignatoryBookDatas">
+                  </app-ixbus-paraph>
+                }
+                @if (!loading && authService.externalSignatoryBook.id === 'fastParapheur' && externalSignatoryBook.signatoryBookEnabled === '') {
+                  <app-fast-paraph #fastParapheur
+                    [additionalsInfos]="additionalsInfos"
+                    [externalSignatoryBookDatas]="externalSignatoryBookDatas">
+                  </app-fast-paraph>
+                }
+                @if (!functions.empty(externalSignatoryBook.signatoryBookEnabled) && !loading) {
+                  <app-maarch-paraph #externalSignatoryBookComponent
+                    [resIds]="data.resIds"
+                    [resourcesToSign]="resourcesToSign"
+                    [additionalsInfos]="additionalsInfos"
+                    [externalSignatoryBookDatas]="externalSignatoryBookDatas"
+                    (workflowUpdated)="visaWorkflowClone = $event">
+                  </app-maarch-paraph>
+                }
+                <!-- EDISSYUM - PYB01 Ajout du connecteur Blueway -->
+                @if (authService.externalSignatoryBook.id === 'blueway') {
+                  <app-blueway-paraph #blueway
+                    [additionalsInfos]="additionalsInfos"
+                    [externalSignatoryBookDatas]="externalSignatoryBookDatas">
+                  </app-blueway-paraph>
+                }
+                <!-- END EDISSYUM - PYB01 -->
+                <!-- EDISSYUM - PYB01 Ajout du connecteur Pastell -->
+                @if (authService.externalSignatoryBook.id === 'pastell') {
+                  <app-pastell #pastell
+                    [additionalsInfos]="additionalsInfos"
+                    [externalSignatoryBookDatas]="externalSignatoryBookDatas">
+                  </app-pastell>
+                }
+                <!-- END EDISSYUM - PYB01 -->
+                <!-- EDISSYUM - YAA01 Ajout du connecteur LexPersona -->
+                @if (authService.externalSignatoryBook.id === 'lexPersona') {
+                  <app-lex-persona #lexPersona
+                    [additionalsInfos]="additionalsInfos"
+                    [externalSignatoryBookDatas]="externalSignatoryBookDatas">
+                  </app-lex-persona>
+                }
+                <!-- END EDISSYUM - YAA01 -->
+                @if (additionalsInfos.noAttachment.length !== 0 && externalSignatoryBookDatas.objectSent === 'attachment') {
+                  <div class="col-md-12"
+                    >
+                    <div>
+                      <div class="alert-message alert-message-danger mailList" role="alert">
+                        <p>
+                          {{'lang.canNotMakeAction' | translate}} :
+                        </p>
+                        <ul>
+                          @for (attachment of additionalsInfos.noAttachment; track attachment) {
+                            <li>
+                              <b>{{attachment.alt_identifier}}</b> : {{'lang.' + attachment.reason | translate}}
+                            </li>
+                          }
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+              <div class="col-md-12" style="padding-top: 10px;">
+                <app-note-editor #noteEditor [resIds]="data.resIds"></app-note-editor>
+              </div>
+              @if (showToggle) {
+                <div class="col-md-12" style="margin: 10px 0px 10px 0px;">
+                  <mat-slide-toggle name="history" class="primary"
+                    [title]="'lang.canGoToNextResDesc' | translate" [(ngModel)]="canGoToNextRes" [checked]="canGoToNextRes">
+                    {{'lang.canGoToNextRes' | translate}}
+                  </mat-slide-toggle>
+                </div>
+                <mat-divider></mat-divider>
+              }
+            </div>
+          </mat-sidenav-content>
+          @if (data.resIds.length === 1) {
+            <mat-sidenav #snav2
+              position='end'
+              autoFocus="false"
+              fixedTopGap="56"
+              [mode]="appService.getViewMode() ? 'over' : 'side'"
+              [opened]="true"
+              [ngStyle]="{'width': '600px'}"
+              style="overflow-x:hidden;">
+              <app-attachments-list #attachmentsList
+                [isModal]="true"
+                [resId]="data.resIds[0]"
+                (afterActionAttachment)="afterAttachmentToggle($event)">
+              </app-attachments-list>
+            </mat-sidenav>
+          }
+        </mat-sidenav-container>
+      }
+    </div>
+    <span class="divider-modal"></span>
+    <div mat-dialog-actions class="actions">
+      <button mat-raised-button mat-button class="primary" [disabled]="loading || finalLoading || !isValidAction() || (this.sendSummarySheet && !this.summarySheet)"
+      (click)="onSubmit()">{{'lang.validate' | translate}}</button> <!-- EDISSYUM - (AMI01 + AMO01) Intégration fiche de liaison au parapheur externe - Ajout finalLoading dans [disabled] -->
+      <button mat-raised-button mat-button [disabled]="loading || finalLoading" [mat-dialog-close]="">{{'lang.cancel' | translate}}</button> <!-- EDISSYUM - (AMI01 + AMO01) Intégration fiche de liaison au parapheur externe - Ajout finalLoading dans [disabled] -->
+    </div>
+  </div>

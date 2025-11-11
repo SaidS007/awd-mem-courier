@@ -1,0 +1,133 @@
+<div class="mat-dialog-content-container" [ngStyle]="{'min-height': emptyMandatoryFields.length > 0 ? '0px' : ''}"> <!-- EDISSYUM - NCH01 Rajout checkEmptyFields pour l'action système Envoyer pour visa | Rajout ngStyle -->
+  <h1 mat-dialog-title>{{data.action.label}}</h1>
+  <div mat-dialog-content>
+    @if (loading) {
+      <div class="loading" style="display:flex;height:100%;">
+        <mat-spinner style="margin:auto;"></mat-spinner>
+      </div>
+    }
+      <!-- EDISSYUM - NCH01 Rajout checkEmptyFields pour l'action système Envoyer pour visa -->
+      @if (emptyMandatoryFields.length > 0) {
+          <div>
+              @if (data.resIds.length > 1) {
+                  <div class="alert-message alert-message-danger mailList" role="alert">
+                      <p style="text-decoration: none!important">{{'lang.cannotsentToVisaMails' | translate}} :</p>
+                      <ul>
+                          <li *ngFor="let emptyFields of emptyMandatoryFields">
+                              <b>{{emptyFields.chrono}}</b> : {{emptyFields.fields}}
+                          </li>
+                      </ul>
+                  </div>
+              }
+              @if(data.resIds.length < 2) {
+                  <div class="alert-message alert-message-danger mailList" role="alert">
+                      <p style="text-decoration: none!important">{{'lang.cannotsentToVisaThisMail' | translate}} : {{emptyMandatoryFields[0].fields}}</p>
+                  </div>
+              }
+          </div>
+      }
+      <!-- END EDISSYUM - NCH01 -->
+    <mat-sidenav-container autosize style="height:100%;">
+      <mat-sidenav-content style="background: white;padding:10px;">
+        <div>
+          {{'lang.makeActionOn' | translate}}
+          @if (data.resIds.length === 0) {
+            <b class="primary highlight">{{'lang.currentIndexingMail' | translate}}</b>
+          }
+          @if (data.resIds.length === 1) {
+            <b class="primary highlight">{{data.resource.chrono}}</b>
+          }
+          @if (data.resIds.length > 1) {
+            <b class="primary highlight">{{data.resIds.length}}
+            {{'lang.elements' | translate}}</b>
+            } ?
+          </div>
+          @if (data.resIds.length === 1) {
+            <div class="toggle-integration">
+              <button class="attachment-icon primary" autofocus
+                mat-icon-button [title]="getIntegratedAttachmentsLength() + ' ' + ('lang.attachmentsInSignatoryBook' | translate)"
+                (click)="onSidenavStateChanged()">
+                <mat-icon fontSet="fas"
+                  [matBadge]="getIntegratedAttachmentsLength()"
+                  fontIcon="fa-paperclip fa-2x">
+                </mat-icon>
+              </button>
+              @for (inteKey of integrationsInfo | keyvalue; track inteKey) {
+                <mat-checkbox class="primary"
+                  (click)="toggleIntegration(inteKey.key)" [checked]="data.resource.integrations[inteKey.key]">
+                  {{'lang.' + inteKey.key + '_doc' | translate}}
+                </mat-checkbox>
+              }
+            </div>
+          }
+          @if (resourcesError.length > 0) {
+            <div class="alert-message alert-message-danger mailList" role="alert">
+              <p>
+                {{'lang.canNotMakeAction' | translate}} :
+              </p>
+              <ul>
+                @for (ressource of resourcesError; track ressource) {
+                  <li>
+                    <b>{{ressource.alt_identifier}}</b> : {{'lang.' + ressource.reason | translate}}
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+          @if (resourcesMailing.length > 0 && appVisaWorkflow.getFirstVisaUser() !== '' && appVisaWorkflow.visaWorkflow.items[0].requested_signature) {
+            <div
+              class="alert-message alert-message-info" role="alert">
+              <p>{{'lang.mailingActionInformations' | translate}}</p>
+              <ul>
+                @for (ressource of resourcesMailing; track ressource) {
+                  <li>
+                    <b>{{ressource.alt_identifier}}</b>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+          @if (!noResourceToProcess) {
+            <app-visa-workflow
+              [adminMode]="true" [visaWorkflowFromAction]="visaWorkflowClone" #appVisaWorkflow [lockVisaCircuit] = "lockVisaCircuit">
+            </app-visa-workflow>
+          }
+          @if (!noResourceToProcess) {
+            <div style="padding-top: 10px;">
+              <app-note-editor #noteEditor [resIds]="data.resIds"></app-note-editor>
+              @if (showToggle) {
+                <div class="row" style="margin: 10px 0px 10px 0px;">
+                  <mat-slide-toggle name="history" class="primary"
+                    [title]="'lang.canGoToNextResDesc' | translate" [(ngModel)]="canGoToNextRes" [checked]="canGoToNextRes">
+                    {{'lang.canGoToNextRes' | translate}}
+                  </mat-slide-toggle>
+                </div>
+              }
+            </div>
+          }
+        </mat-sidenav-content>
+        @if (data.resIds.length === 1) {
+          <mat-sidenav #snav2
+            position='end'
+            autoFocus="false"
+            fixedTopGap="56"
+            [mode]="appService.getViewMode() ? 'over' : 'side'"
+            [opened]="true"
+            [ngStyle]="{'width': '600px'}"
+            style="overflow-x:hidden;">
+            <app-attachments-list #attachmentsList
+              [isModal]="true"
+              [resId]="data.resIds[0]"
+              (afterActionAttachment)="afterAttachmentToggle()">
+            </app-attachments-list>
+          </mat-sidenav>
+        }
+      </mat-sidenav-container>
+    </div>
+    <span class="divider-modal"></span>
+    <div mat-dialog-actions class="actions">
+      <button mat-raised-button mat-button class="primary" [disabled]="loading || !isValidAction()"
+      (click)="onSubmit()">{{'lang.validate' | translate}}</button>
+      <button mat-raised-button mat-button [disabled]="loading" [mat-dialog-close]="">{{'lang.cancel' | translate}}</button>
+    </div>
+  </div>

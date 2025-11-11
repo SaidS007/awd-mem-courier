@@ -1,0 +1,85 @@
+@if (loading || processing) {
+  <div class="loading" style="display:flex;height:100%;">
+    <mat-spinner style="margin:auto;"></mat-spinner>
+  </div>
+}
+@if (!loading && !onError) {
+  @if (editor.mode === 'onlyoffice') {
+    <app-onlyoffice-viewer
+      #editorComp
+      class="editor-container"
+      [params]="editor.options"
+      [file]="file"
+      [hideCloseEditor]="true"
+      [hideFullscreenButton]="true"
+      [hideCollapseButton]="true"
+      [editMode]="true"
+      (triggerModifiedDocument)="modified = true"
+      (triggerCloseEditor)="processError.emit(true)"
+    ></app-onlyoffice-viewer>
+  }
+  @if (editor.mode === 'collaboraOnline') {
+    <app-collabora-online-viewer
+      #editorComp
+      class="editor-container"
+      [params]="editor.options"
+      [file]="file"
+      [hideCloseEditor]="true"
+      [hideFullscreenButton]="true"
+      [hideCollapseButton]="true"
+      [editMode]="true"
+      (triggerCloseEditor)="processError.emit(true)"
+      (triggerModifiedDocument)="modified = true"
+    ></app-collabora-online-viewer>
+  }
+  @if (editor.mode === 'office365sharepoint') {
+    <app-office-sharepoint-viewer
+      #editorComp
+      class="editor-container"
+      [params]="editor.options"
+      [file]="file"
+      [hideDownloadButton]="true"
+      [hideCancelButton]="true"
+      [primaryColor]="true"
+      [editMode]="true"
+      (triggerCloseEditor)="processError.emit(true)"
+      (triggerModifiedDocument)="modified = true"
+    ></app-office-sharepoint-viewer>
+  }
+  @if (editor.mode === 'java') {
+    <app-java-editor
+      #editorComp
+      class="editor-container"
+      [params]="editor.options"
+      [file]="file"
+      [hideCancelButton]="true"
+      [primaryColor]="true"
+      (triggerCloseEditor)="processError.emit(true)"
+      (triggerModifiedDocument)="modified = true"
+    ></app-java-editor>
+  }
+  @if (modified && ['collaboraOnline', 'onlyoffice'].indexOf(editor.mode) > -1) {
+    <button
+      mat-fab
+      class="save-modifications accent"
+      [disabled]="processing"
+      [title]="'lang.saveModifications' | translate"
+      (click)="saveFile()">
+      <mat-icon style="height:auto;font-size:20px; color:white" class="fas fa-check"></mat-icon>
+    </button>
+  }
+  <div mat-dialog-actions class="actions">
+    <button mat-raised-button  class="primary"
+      [disabled]="!modified || processing"
+      [title]="'lang.saveModifications' | translate"
+      (click)="saveFile()">
+      {{ 'lang.validate' | translate }}
+    </button>
+    <button mat-raised-button
+      [title]="'lang.cancel' | translate"
+      [disabled]="processing"
+      (click)="closeModal()">
+      {{ 'lang.cancel' | translate }}
+    </button>
+  </div>
+}

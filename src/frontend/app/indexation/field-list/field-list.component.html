@@ -1,0 +1,168 @@
+@if (dataCustomFields !== undefined) {
+  <div class="content" cdkDropList id="customFieldsList"
+    [cdkDropListConnectedTo]="['indexingModelsCustomFieldsList_mail','indexingModelsCustomFieldsList_contact','indexingModelsCustomFieldsList_process','indexingModelsCustomFieldsList_classifying']"
+    [cdkDropListData]="dataCustomFields" (cdkDropListDropped)="drop($event)">
+    @for (field of dataCustomFields | sortBy: 'label'; track field) {
+      <div class="customFieldRow" cdkDrag [cdkDragData]="field">
+        <div class="customFieldDrag">
+          <i style="color: #3A7C00" class="fas fa-arrows-alt fa-2x" cdkDragHandle></i>
+        </div>
+        <div style="flex:1;display: flex;">
+          <div [id]="field.identifier" class="fieldLabel">
+            {{field.label}}
+          </div>
+          <div class="fieldInput" [class.advancedInput]="field.type === 'checkbox'">
+            @if (['string', 'autocomplete', 'banAutocomplete', 'contact'].indexOf(field.type) > -1) {
+              <mat-form-field class="input-form" floatLabel="never">
+                <textarea matInput [placeholder]="'lang.' + field.type + 'Input' | translate" cdkTextareaAutosize
+                matAutosizeMinRows="1" cdkAutosizeMaxRows="6" disabled></textarea>
+              </mat-form-field>
+            }
+            @if (field.type === 'integer') {
+              <mat-form-field class="input-form" floatLabel="never">
+                <input type="number" matInput [placeholder]="'lang.' + field.type + 'Input' | translate" disabled>
+              </mat-form-field>
+            }
+            @if (field.type === 'select') {
+              <mat-form-field class="input-form" floatLabel="never">
+                <mat-select [placeholder]="'lang.' + field.type + 'Input' | translate" disabled>
+                  @for (value of field.values; track value) {
+                    <mat-option [value]="value">
+                      {{value}}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            }
+            @if (field.type === 'date') {
+              <mat-form-field class="input-form" floatLabel="never">
+                <input matInput [matDatepicker]="picker" [placeholder]="'lang.' + field.type + 'Input' | translate"
+                  (click)="picker.open()" disabled>
+                <mat-datepicker-toggle matSuffix [for]="picker">
+                </mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+            }
+            @if (field.type === 'radio') {
+              <mat-radio-group class="radio-form primary" disabled>
+                @for (value of field.values; track value) {
+                  <mat-radio-button [value]="value.id">
+                    {{value.label}}
+                  </mat-radio-button>
+                }
+              </mat-radio-group>
+            }
+            @if (field.type === 'checkbox') {
+              <div class="input-form checkbox-form">
+                <mat-selection-list #checkboxCustomElement class="div-list" disabled>
+                  @for (value of field.values; track value) {
+                    <mat-list-option [value]="value.id"
+                      checkboxPosition="before">
+                      {{value.label}}
+                    </mat-list-option>
+                  }
+                </mat-selection-list>
+              </div>
+              <mat-chip-list class="checkbox-selected-list">
+                @for (chip of checkboxCustomElement.selectedOptions.selected; track chip) {
+                  <mat-chip selected>
+                    {{'lang.selectedValue' | translate}}
+                  </mat-chip>
+                }
+              </mat-chip-list>
+            }
+          </div>
+          <div class="fieldState">
+            <i class="fas fa-asterisk" [class.noMandatory]="!field.mandatory"></i>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+}
+@if (dataFields !== undefined) {
+  <div class="content" cdkDropList id="fieldsList"
+    [cdkDropListConnectedTo]="['indexingModelsCustomFieldsList_mail','indexingModelsCustomFieldsList_contact','indexingModelsCustomFieldsList_process','indexingModelsCustomFieldsList_classifying']"
+    [cdkDropListData]="dataFields" (cdkDropListDropped)="drop($event)">
+    @for (field of dataFields | sortBy: 'label'; track field) {
+      <div cdkDrag [cdkDragData]="field">
+        @if (field.identifier.indexOf('registeredMail_') === -1) {
+          <div class="customFieldRow">
+            <div class="customFieldDrag" cdkDragHandle>
+              <i style="color: #3A7C00" class="fas fa-arrows-alt fa-2x"></i>
+            </div>
+            <div style="flex:1;display: flex;">
+              <div [id]="field.identifier" class="fieldLabel">
+                {{field.label}}
+              </div>
+              <div class="fieldInput">
+                @if (field.type === 'string' || field.type === 'autocomplete') {
+                  <mat-form-field class="input-form" floatLabel="never">
+                    <textarea matInput [placeholder]="'lang.' + field.type + 'Input' | translate" cdkTextareaAutosize
+                    matAutosizeMinRows="1" cdkAutosizeMaxRows="6" disabled></textarea>
+                  </mat-form-field>
+                }
+                @if (field.type === 'integer') {
+                  <mat-form-field class="input-form" floatLabel="never">
+                    <input type="number" matInput [placeholder]="'lang.' + field.type + 'Input' | translate" disabled>
+                  </mat-form-field>
+                }
+                @if (field.type === 'select') {
+                  <mat-form-field class="input-form" floatLabel="never">
+                    <mat-select [placeholder]="'lang.' + field.type + 'Input' | translate" disabled>
+                      @for (value of field.values; track value) {
+                        <mat-option [value]="value">
+                          {{value}}
+                        </mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                }
+                @if (field.type === 'date') {
+                  <mat-form-field class="input-form" floatLabel="never">
+                    <input matInput [matDatepicker]="picker" [placeholder]="'lang.' + field.type + 'Input' | translate"
+                      (click)="picker.open()" disabled>
+                    <mat-datepicker-toggle matSuffix [for]="picker">
+                    </mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                  </mat-form-field>
+                }
+                @if (field.type === 'radio') {
+                  <mat-radio-group class="radio-form primary" disabled>
+                    @for (value of field.values; track value) {
+                      <mat-radio-button [value]="value.id">
+                        {{value.label}}
+                      </mat-radio-button>
+                    }
+                  </mat-radio-group>
+                }
+                @if (field.type === 'checkbox') {
+                  <div class="input-form checkbox-form">
+                    <mat-selection-list #checkboxElement class="div-list" disabled>
+                      @for (value of field.values; track value) {
+                        <mat-list-option [value]="value.id"
+                          checkboxPosition="before">
+                          {{value.label}}
+                        </mat-list-option>
+                      }
+                    </mat-selection-list>
+                  </div>
+                  <mat-chip-list class="checkbox-selected-list">
+                    @for (chip of checkboxElement.selectedOptions.selected; track chip) {
+                      <mat-chip selected>
+                        {{'lang.selectedValue' | translate}}
+                      </mat-chip>
+                    }
+                  </mat-chip-list>
+                }
+              </div>
+              <div class="fieldState">
+                <i class="fas fa-asterisk" [class.noMandatory]="!field.mandatory"></i>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+}

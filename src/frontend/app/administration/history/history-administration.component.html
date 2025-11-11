@@ -1,0 +1,87 @@
+<mat-sidenav-container autosize class="maarch-container">
+  <ng-template #adminMenuTemplate>
+    <mat-nav-list>
+      <h3 mat-subheader>{{'lang.actions' | translate}}</h3>
+      <button mat-list-item (click)="openHistoryExport()">
+        <mat-icon mat-list-icon style="color: #3A7C00" class="fa fa-file-export"></mat-icon>
+        <p mat-line>
+          {{'lang.exportHistory' | translate}}
+        </p>
+      </button>
+    </mat-nav-list>
+    <mat-divider></mat-divider>
+    <mat-nav-list>
+      @for (menu of subMenus; track menu) {
+        <button mat-list-item [class.active]="menu.current" [routerLink]="menu.route">
+          <mat-icon style="color: #3A7C00" mat-list-icon [class]="menu.icon"></mat-icon>
+          <p mat-line>
+            {{menu.label}}
+          </p>
+        </button>
+      }
+    </mat-nav-list>
+  </ng-template>
+  <mat-sidenav-content>
+    <div class="bg-head">
+      <div class="bg-head-title" [class.customContainerRight]="appService.getViewMode()">
+        <div class="bg-head-title-label">
+          <app-header-left></app-header-left>
+        </div>
+        <div class="bg-head-title-tool">
+          <app-header-right></app-header-right>
+        </div>
+      </div>
+      <div class="bg-head-content" [class.fullContainer]="appService.getViewMode()">
+        <div style="display: grid;grid-template-columns: repeat(2, 1fr);grid-gap: 10px;width: 100%;">
+          <mat-form-field (click)="startPicker.open()" style="cursor:pointer;" class="dateFilter">
+            <mat-label style="color:white;">{{'lang.since' | translate}}
+            </mat-label>
+            <input [(ngModel)]="appHistoryList.startDateFilter" matInput [matDatepicker]="startPicker"
+              [placeholder]="'lang.since' | translate" [max]="appHistoryList.endDateFilter" readonly
+              style="cursor:pointer;" (dateChange)="appHistoryList.filterStartDate()">
+            @if (!appHistoryList.startDateFilter) {
+              <mat-datepicker-toggle matSuffix [for]="startPicker">
+              </mat-datepicker-toggle>
+            }
+            <mat-datepicker [touchUi]="appService.getViewMode()" #startPicker>
+            </mat-datepicker>
+            @if (appHistoryList.startDateFilter) {
+              <button mat-button class="warn" matSuffix mat-icon-button
+                (click)="$event.stopPropagation();appHistoryList.startDateFilter = '';appHistoryList.filterStartDate()"
+                [title]="'lang.eraseValue' | translate">
+                <mat-icon style="color:#8e3e52" class="fa fa-calendar-times">
+                </mat-icon>
+              </button>
+            }
+          </mat-form-field>
+          <mat-form-field (click)="endPicker.open()" style="cursor:pointer;" class="dateFilter">
+            <mat-label style="color:white;">{{'lang.until' | translate}}
+            </mat-label>
+            <input [(ngModel)]="appHistoryList.endDateFilter" matInput [matDatepicker]="endPicker"
+              [placeholder]="'lang.until' | translate" [min]="appHistoryList.startDateFilter" readonly
+              style="cursor:pointer;" (dateChange)="appHistoryList.filterEndDate()">
+            @if (!appHistoryList.endDateFilter) {
+              <mat-datepicker-toggle matSuffix [for]="endPicker">
+              </mat-datepicker-toggle>
+            }
+            <mat-datepicker [touchUi]="appService.getViewMode()" #endPicker>
+            </mat-datepicker>
+            @if (appHistoryList.endDateFilter) {
+              <button mat-button class="warn" matSuffix mat-icon-button
+                (click)="$event.stopPropagation();appHistoryList.endDateFilter = '';appHistoryList.filterEndDate()"
+                [title]="'lang.eraseValue' | translate">
+                <mat-icon style="color:#8e3e52" class="fa fa-calendar-times">
+                </mat-icon>
+              </button>
+            }
+          </mat-form-field>
+        </div>
+      </div>
+    </div>
+    <div class="container" [class.fullContainer]="appService.getViewMode()">
+      <div class="container-content">
+        <app-history-list #appHistoryList></app-history-list>
+      </div>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

@@ -1,0 +1,45 @@
+@if (!loading) {
+  @for (diffList of diffListHistory; track diffList) {
+    <div class="dateTitle">
+      <div mat-subheader class="primary" [title]="diffList.creationDate | fullDate">
+        {{'lang.createdBy' | translate}}&nbsp;<b>{{diffList.user}}</b> &nbsp;<b>{{diffList.creationDate | timeAgo : 'full'}}</b>
+      </div>
+      <mat-divider></mat-divider>
+    </div>
+    @for (role of availableRoles; track role) {
+      @if (diffList.details[role.id]) {
+        <mat-expansion-panel class="diffusionList"
+          [expanded]="role.id === 'dest' || expanded">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              {{role.label}} @if (role.id !== 'dest') {
+              ({{diffList.details[role.id].items.length}})
+            }
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <mat-list>
+          @for (diffusion of diffList.details[role.id].items; track diffusion; let i = $index) {
+            <mat-list-item disableRipple class="item-diffusion-list"
+              >
+              <mat-icon mat-list-icon style="color: #3A7C00" class="fa"
+                [class.fa-user]="diffusion.item_type === 'user_id' || diffusion.item_type === 'user'"
+                [class.fa-sitemap]="diffusion.item_type === 'entity_id' || diffusion.item_type === 'entity'">
+              </mat-icon>
+              <div class="item-diffusion">
+                <p mat-line [title]="diffusion.itemLabel">{{diffusion.itemLabel}}</p>
+                <p mat-line class="subInfo" [title]="diffusion.itemSubLabel">
+                {{diffusion.itemSubLabel}}</p>
+              </div>
+            </mat-list-item>
+          }
+        </mat-list>
+      </mat-expansion-panel>
+    }
+  }
+}
+}
+@if (loading) {
+  <div style="display:flex;">
+    <mat-spinner style="margin:auto;"></mat-spinner>
+  </div>
+}

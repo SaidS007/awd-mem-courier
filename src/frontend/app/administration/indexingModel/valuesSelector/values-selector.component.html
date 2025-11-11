@@ -1,0 +1,57 @@
+<div class="mat-dialog-content-container">
+  <h1 mat-dialog-title>{{data.label}}</h1>
+  <div mat-dialog-content>
+    <mat-slide-toggle style="margin-bottom: 15px; margin-top: 10px;"
+      [title]="'lang.allDoctypesDesc' | translate"
+      [(ngModel)]="data.allDoctypes"
+      [checked]="data.allDoctypes"
+      class="primary">
+      {{'lang.allDoctypes' | translate}}
+    </mat-slide-toggle>
+    <div style="display: grid;">
+      <app-maarch-message style="margin-bottom: 8px;">{{'lang.chooseValuesMsg' | translate}} :</app-maarch-message>
+      <mat-checkbox [checked]="allChecked()"
+        class="primary"
+        [indeterminate]="!emptyChecked() && !allChecked()"
+        (change)="toggleAll($event.checked)"><i>{{'lang.selectAll' | translate}}</i>
+      </mat-checkbox>
+    </div>
+    @for (firstLevel of values; track firstLevel) {
+      <div>
+        @if (firstLevel.firstLevelId === undefined && firstLevel.secondLevelId === undefined) {
+          <span style="font-weight: bold;"> {{ firstLevel.title }}</span>
+          <mat-accordion [multi]="true">
+            @for (secondLevel of getSecondLevel(firstLevel.id); track secondLevel) {
+              <mat-expansion-panel [expanded]="true" style="margin: 3px;">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-checkbox [checked]="allSecondLevel(secondLevel.id)" (click)="$event.stopPropagation()"
+                      (change)="toggleSecondLevel(secondLevel.id, $event.checked)"
+                      [indeterminate]="!emptyCheckedSecondLevel(secondLevel.id) && !allSecondLevel(secondLevel.id)"
+                      class="primary firstLevel">
+                      {{!functionsServce.empty(secondLevel.title) ? secondLevel.title : secondLevel.label}}
+                    </mat-checkbox>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-list>
+                  @for (type of getTypes(secondLevel.id); track type) {
+                    <mat-list-item>
+                      <mat-checkbox [value]="type.disabled" [checked]="!type.disabled" class="primary" (change)="type.disabled=!type.disabled">{{type.title}}</mat-checkbox>
+                    </mat-list-item>
+                  }
+                </mat-list>
+              </mat-expansion-panel>
+            }
+          </mat-accordion>
+        }
+      </div>
+    }
+  </div>
+  <span class="divider-modal"></span>
+  <div mat-dialog-actions>
+    <button class="actions primary" mat-raised-button
+    (click)="onSubmit()" [disabled]="emptyChecked() && !data.allDoctypes">{{'lang.validate' | translate}}</button>
+    <button class="actions"  mat-raised-button
+    (click)="this.dialogRef.close('');">{{'lang.cancel' | translate}}</button>
+  </div>
+</div>

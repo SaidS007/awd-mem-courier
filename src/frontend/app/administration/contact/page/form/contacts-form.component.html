@@ -1,0 +1,549 @@
+@if (loading) {
+  <div class="loading">
+    <mat-spinner style="margin:auto;"></mat-spinner>
+  </div>
+} @else {
+  <mat-menu #menu="matMenu">
+    <button mat-menu-item [matMenuTriggerFor]="mainInfo"
+    [disabled]="noField('mainInfo')">{{'lang.denomination' | translate}}</button>
+    <button mat-menu-item [matMenuTriggerFor]="address" [disabled]="noField('address')">{{'lang.address' | translate}}</button>
+    <button mat-menu-item [matMenuTriggerFor]="complement"
+    [disabled]="noField('complement')">{{'lang.additionals' | translate}}</button>
+    <button mat-menu-item [matMenuTriggerFor]="maarch2maarch"
+    [disabled]="noField('maarch2maarch')">MEM2MEM</button>
+  </mat-menu>
+  <mat-menu #mainInfo="matMenu">
+    <button mat-menu-item (click)="toogleAllFieldsUnit('mainInfo')"
+    style="text-align: center;">{{'lang.addAll' | translate}}</button>
+    <mat-divider></mat-divider>
+    @for (field of contactForm; track field) {
+      @if (!field.display && field.unit === 'mainInfo') {
+        <button mat-menu-item
+          (click)="field.display=!field.display">
+          @if (field.filling) {
+            <mat-icon style="height: auto;padding-right: 10px;"
+              [title]="'lang.targetFillingField' | translate" [style.color]="fillingRate.color" class="fas fa-circle rate">
+            </mat-icon>
+          }
+          <span>{{field.label}}</span>
+        </button>
+      }
+    }
+  </mat-menu>
+  <mat-menu #address="matMenu">
+    <button mat-menu-item (click)="toogleAllFieldsUnit('address')"
+    style="text-align: center;">{{'lang.addAll' | translate}}</button>
+    <mat-divider></mat-divider>
+    @for (field of contactForm; track field) {
+      @if (!field.display && field.unit === 'address' && field.id !== 'sector') {
+        <button mat-menu-item
+          (click)="field.display=!field.display">
+          @if (field.filling) {
+            <mat-icon style="height: auto;padding-right: 10px;"
+              [title]="'lang.targetFillingField' | translate" [style.color]="fillingRate.color" class="fas fa-circle rate">
+            </mat-icon>
+          }
+          <span>{{field.label}}</span>
+        </button>
+      }
+    }
+  </mat-menu>
+  <mat-menu #complement="matMenu">
+    <button mat-menu-item (click)="toogleAllFieldsUnit('complement')"
+    style="text-align: center;">{{'lang.addAll' | translate}}</button>
+    <mat-divider></mat-divider>
+    @for (field of contactForm; track field) {
+      @if (!field.display && field.unit === 'complement') {
+        <button mat-menu-item
+          (click)="field.display=!field.display">
+          @if (field.filling) {
+            <mat-icon style="height: auto;padding-right: 10px;"
+              [title]="'lang.targetFillingField' | translate" [style.color]="fillingRate.color" class="fas fa-circle rate">
+            </mat-icon>
+          }
+          <span>{{field.label}}</span>
+        </button>
+      }
+    }
+  </mat-menu>
+  <mat-menu #maarch2maarch="matMenu">
+    <button mat-menu-item (click)="toogleAllFieldsUnit('maarch2maarch')"
+    style="text-align: center;">{{'lang.addAll' | translate}}</button>
+    <mat-divider></mat-divider>
+    @for (field of contactForm; track field) {
+      @if (!field.display && field.unit === 'maarch2maarch') {
+        <button mat-menu-item
+          (click)="field.display=!field.display">
+          @if (field.filling) {
+            <mat-icon style="height: auto;padding-right: 10px;"
+              [title]="'lang.targetFillingField' | translate" [style.color]="fillingRate.color" class="fas fa-circle rate">
+            </mat-icon>
+          }
+          <span>{{field.label}}</span>
+        </button>
+      }
+    }
+  </mat-menu>
+  @if (this.fillingParameters.enable) {
+    <div style="padding: 10px;">
+      <div class="rate" [style.color]="fillingRate.color">{{'lang.contactFilledTo' | translate}} <b>{{fillingRate.value}} %</b>
+    </div>
+    <mat-progress-bar mode="determinate" class="fillingBar" [color]="fillingRate.class" [value]="fillingRate.value">
+    </mat-progress-bar>
+  </div>
+}
+<div style="display: flex; flex: 1; align-items:flex-start;">
+  @if (autocompleteContactName.length > 0 && !contactChanged) {
+    <div class="alert-message alert-message-info" role="alert">
+      <div [ngStyle]="{'padding': autocompleteContactName.length === 1 ? '10px' : '0px'}" style="margin: 13px; width: 100% !important;">
+        <div style="margin-top: -7px; margin-bottom: 2px;">
+          {{'lang.contact' | translate}}
+          <ng-container> <b>{{contactService.formatContact(autocompleteContactName[0])}}</b></ng-container> {{'lang.find' | translate}}
+          <button class="link-button" style="cursor: pointer;font-weight:bold;font-style: italic;" (click)="setContact(autocompleteContactName[0].id)">{{'lang.click' | translate}} {{'lang.here' | translate}}</button> {{!fromAdministration ? ('lang.associateContact' | translate) : ('lang.accessContact' | translate)}}
+        </div>
+        @if (autocompleteContactName.length > 1) {
+          <div style="margin-bottom: -8px;">
+            <mat-icon class="fas fa-angle-right" style="font-size:16px;width:14px; color: #3A7C00"></mat-icon>
+            <button  class="link-button" (click)="showAllContact()">Voir les autres contacts</button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+  @if (companyFound !== null) {
+    <div class="alert-message alert-message-info" role="alert" [@hideShow]>
+      <div style="padding:10px;">
+        {{'lang.contactsParameters_company' | translate}} <b>{{companyFound.company}}</b>
+        {{'lang.found' | translate}}
+        !
+        <a (click)="setAddress(companyFound)"
+        style="cursor: pointer;font-weight:bold;font-style: italic;">{{'lang.click' | translate}} {{'lang.here' | translate}}</a>
+        {{'lang.toCopyAddress' | translate}} :<br/>
+        <q style="font-weight: bold;width: 100%;display: block;text-align: center;">{{companyFound.addressNumber}} {{companyFound.addressStreet}}, {{companyFound.addressPostcode}}
+        {{companyFound.addressTown}}, {{companyFound.addressCountry}}</q>
+      </div>
+    </div>
+  }
+</div>
+<div class="row" style="margin: 0px;">
+  @for (unit of contactUnit; track unit) {
+    @if (!isEmptyUnit(unit.id)) {
+      <div [class.col-sm-12]="unit.id !== 'maarch2maarch' && unit.id !== 'complement' && !isEmptyUnit('mainInfo') && !isEmptyUnit('address')"
+        [class.col-md-6]="unit.id !== 'maarch2maarch' && unit.id !== 'complement' && !isEmptyUnit('mainInfo') && !isEmptyUnit('address')"
+        [class.col-md-12]="unit.id === 'complement' || unit.id === 'maarch2maarch'"
+        >
+        <mat-list>
+          <h3 mat-subheader class="unitTitle"><span style="flex:1">{{unit.label}}</span>@if (unit.id === 'address') {
+          <a
+            (click)="addressBANMode=!addressBANMode"
+          style="cursor: pointer;">{{addressBANMode ? ('lang.switchManualAddress' | translate) : ('lang.searchAddressDb' | translate)}}</a>
+        }
+      </h3>
+      @for (field of contactForm; track field; let i = $index) {
+        @if ((field.unit === unit.id && unit.id !== 'address') || (field.unit === unit.id && unit.id === 'address' && !addressBANMode)) {
+          <mat-list-item class="contact-item"
+            >
+            @if (field.display) {
+              <p mat-line class="contact-content">
+                @if (field.type === 'string' && field.id !== 'url' && field.id !== 'externalId_m2m' && field.id !== 'addressCountry' && field.id !== 'addressPostcode' && field.id !== 'addressTown') {
+                  <mat-form-field>
+                    <!-- EDISSYUM - NCH01 Changer les input en textarea pour les champs custom des contacts | Remplacer l'INPUT (présent dans le second span) par les deux span -->
+                    <!--   <input matInput [formControl]="field.control" [placeholder]="field.label"-->
+                    <!--        (blur)="checkCompany(field); checkContactName(field); checkFilling();" (ngModelChange)="toUpperCase(field, $event)" [required]="field.required">-->
+                    @if (unit.id == 'complement') {
+                      <span>
+                        <textarea matInput [required]="field.required" [formControl]="field.control"
+                          [(ngModel)]="field.control.value" [placeholder]="field.label"
+                          matTextareaAutosize matAutosizeMinRows="1" cdkAutosizeMaxRows="6"
+                          (blur)="checkCompany(field); checkContactName(field); checkFilling();"
+                        (ngModelChange)="toUpperCase(field)" [readonly]="this.readOnlyMode"></textarea>
+                      </span>
+                    }
+                    @if (unit.id != 'complement') {
+                      <span>
+                        <input matInput [formControl]="field.control" [placeholder]="field.label"
+                          (blur)="checkCompany(field); checkContactName(field); checkFilling();"
+                          (ngModelChange)="toUpperCase(field)" [required]="field.required"
+                          [readonly]="this.readOnlyMode"> <!-- EDISSYUM - NCH01 Rajout de la possibilité de visualiser les contacts sans droits d'administration | Ajout readonly -->
+                        </span>
+                      }
+                      <!-- EDISSYUM - NCH01 END -->
+                      @if (!isEmptyValue(field.desc)) {
+                        <mat-hint align="end"
+                          [innerHTML]="field.desc">
+                      </mat-hint>
+                    }
+                    @if (field.control.status!=='VALID'  && field.control.touched) {
+                      <mat-error>
+                      {{getErrorMsg(field.control.errors)}}</mat-error>
+                    }
+                    @if (field.filling) {
+                      <mat-icon style="height: auto;" matSuffix
+                        [title]="'lang.targetFillingField' | translate" [style.color]="fillingRate.color"
+                      class="fas fa-circle rate"></mat-icon>
+                    }
+                  </mat-form-field>
+                }
+                @if (field.type === 'integer') {
+                  <mat-form-field>
+                    <!-- EDISSYUM - NCH01 Rajout de la possibilité de visualiser les contacts sans droits d'administration | Ajout disabled -->
+                    <input type="text" matInput [formControl]="field.control"
+                      [disabled]="this.readOnlyMode" [placeholder]="field.label" min="0" step="0.1" [required]="field.required">
+                    @if (field.control.status!=='VALID' && field.control.touched) {
+                      <mat-error>
+                      {{getErrorMsg(field.control.errors)}}</mat-error>
+                    }
+                  </mat-form-field>
+                }
+                @if (field.type === 'select') {
+                  <!-- EDISSYUM - NCH01 Rajout de la possibilité de visualiser les contacts sans droits d'administration | Ajout disabled -->
+                  <app-plugin-select-search [label]="field.label" [required]="field.required"
+                    [showLabel]="true" [formControlSelect]="field.control"
+                    [placeholderLabel]="field.label" [hideErrorDesc]="false" [datas]="field.values"
+                    [class]="''" [disabled]="this.readOnlyMode" [suffixIcon]="field.filling ? {class:'fa-circle', color:fillingRate.color, title: 'lang.targetFillingField' | translate} : null">
+                  </app-plugin-select-search>
+                }
+                @if (field.type === 'date') {
+                  <mat-form-field (click)="picker.open()" style="cursor:pointer;">
+                    <mat-label>{{field.label}}
+                    </mat-label>
+                    <input [formControl]="field.control" matInput [matDatepicker]="picker"
+                      [placeholder]="field.label" readonly style="cursor:pointer;">
+                    @if (!field.control.value) {
+                      <mat-datepicker-toggle matSuffix [for]="picker">
+                      </mat-datepicker-toggle>
+                    }
+                    <mat-datepicker [touchUi]="appService.getViewMode()" #picker>
+                    </mat-datepicker>
+                    @if (field.control.value && !field.control.disabled) {
+                      <button mat-button class="warn" matSuffix mat-icon-button
+                        (click)="$event.stopPropagation();field.control.reset();"
+                        [title]="'lang.eraseValue' | translate">
+                        <mat-icon style="color:#8e3e52" class="fa fa-calendar-times">
+                        </mat-icon>
+                      </button>
+                    }
+                  </mat-form-field>
+                }
+                @if (field.type === 'radio') {
+                  <label class="labelCustom">{{field.label}} @if (field.required) {
+                    *
+                  }</label>
+                  <mat-radio-group class="radio-form primary" [formControl]="field.control">
+                    @for (value of field.values; track value) {
+                      <mat-radio-button [value]="value.id">
+                        {{value.label}}
+                      </mat-radio-button>
+                    }
+                  </mat-radio-group>
+                  @if (field.filling) {
+                    <i
+                      style="position:absolute;height: auto;padding-right: 10px;right: 0px;z-index: 1;top: 50%;transform: translateY(-50%);"
+                      [title]="'lang.targetFillingField' | translate" [style.color]="fillingRate.color"
+                    class="fas fa-circle rate"></i>
+                  }
+                  @if (field.control.status!=='VALID'  && field.control.touched) {
+                    <mat-error>
+                    {{getErrorMsg(field.control.errors)}}</mat-error>
+                  }
+                }
+                @if (field.type === 'checkbox') {
+                  <label class="labelCustom">{{field.label}} @if (field.required) {
+                    *
+                  }</label>
+                  <mat-selection-list #shoes class="checkbox-form" [formControl]="field.control">
+                    @for (value of field.values; track value) {
+                      <mat-list-option [value]="value.id"
+                        class="primary" checkboxPosition="before">
+                        {{value.label}}
+                      </mat-list-option>
+                    }
+                  </mat-selection-list>
+                  @if (field.filling) {
+                    <i
+                      style="position:absolute;height: auto;padding-right: 10px;right: 0px;z-index: 1;top: 50%;transform: translateY(-50%);"
+                      [title]="'lang.targetFillingField' | translate" [style.color]="fillingRate.color"
+                    class="fas fa-circle rate"></i>
+                  }
+                  @if (field.control.status!=='VALID'  && field.control.touched) {
+                    <mat-error>
+                    {{getErrorMsg(field.control.errors)}}</mat-error>
+                  }
+                }
+                @if (field.id === 'url') {
+                  @if (annuaryEnabled) {
+                    <mat-form-field>
+                      <!-- EDISSYUM - NCH01 Rajout de la possibilité de visualiser les contacts sans droits d'administration | Ajout readonly -->
+                      <input type="text" #autoCompleteInputCommunicationMean
+                        [placeholder]="'lang.searchCommunicationMean' | translate" matInput
+                        [formControl]="field.control" [matAutocomplete]="auto" [readonly]="this.readOnlyMode"
+                        (click)="$event.stopPropagation()" (keyup)="resetM2MFields()">
+                      @if (!isEmptyValue(field.desc)) {
+                        <mat-hint align="end"
+                        [innerHTML]="field.desc"></mat-hint>
+                      }
+                      <mat-autocomplete #auto="matAutocomplete"
+                        (optionSelected)="selectCommunicationMean($event)">
+                        @if (communicationMeanResult.length > 0 && !communicationMeanLoading) {
+                          @for (communicationMeanResult of communicationMeanFilteredResult | async; track communicationMeanResult) {
+                            <mat-option
+                              [value]="communicationMeanResult">
+                              {{communicationMeanResult.unitOrganization}}
+                            </mat-option>
+                          }
+                        }
+                        @if (communicationMeanResult.length === 0 && !communicationMeanLoading) {
+                          <mat-option class="autoCompleteInfoResult smallInputInfo"
+                            disabled [innerHTML]="communicationMeanInfo">
+                          </mat-option>
+                        }
+                        @if (communicationMeanLoading) {
+                          <mat-option disabled>
+                            <mat-spinner diameter="20"></mat-spinner>
+                          </mat-option>
+                        }
+                      </mat-autocomplete>
+                    </mat-form-field>
+                  }
+                  @if (!annuaryEnabled) {
+                    <mat-form-field>
+                      <!-- EDISSYUM - NCH01 Rajout de la possibilité de visualiser les contacts sans droits d'administration | Ajout readonly -->
+                      <input type="text" #autoCompleteInputCommunicationMean
+                        [placeholder]="'lang.communicationMean' | translate" matInput
+                        [formControl]="field.control" [readonly]="this.readOnlyMode">
+                      @if (!isEmptyValue(field.desc)) {
+                        <mat-hint align="end"
+                        [innerHTML]="field.desc"></mat-hint>
+                      }
+                    </mat-form-field>
+                  }
+                }
+                @if (field.id === 'externalId_m2m') {
+                  @if (annuaryEnabled) {
+                    <mat-form-field>
+                      <!-- EDISSYUM - NCH01 Rajout de la possibilité de visualiser les contacts sans droits d'administration | Ajout readonly -->
+                      <input type="text" #autoCompleteInputExternalIdM2M
+                        [placeholder]="'lang.searchExternalIdM2M' | translate" matInput
+                        [formControl]="field.control" [matAutocomplete]="auto"
+                        (click)="$event.stopPropagation()" [readonly]="this.readOnlyMode"
+                        (keyup)="resetAutocompleteExternalIdM2M()">
+                      @if (!isEmptyValue(field.desc)) {
+                        <mat-hint align="end"
+                        [innerHTML]="field.desc"></mat-hint>
+                      }
+                      <mat-autocomplete #auto="matAutocomplete"
+                        (optionSelected)="selectExternalIdM2M($event)">
+                        @if (externalId_m2mResult.length > 0 && !externalId_m2mLoading) {
+                          @for (externalId_m2mResult of externalId_m2mFilteredResult | async; track externalId_m2mResult) {
+                            <mat-option
+                              [value]="externalId_m2mResult">
+                              {{externalId_m2mResult.unitOrganization}}
+                            </mat-option>
+                          }
+                        }
+                        @if (externalId_m2mResult.length === 0 && !externalId_m2mLoading) {
+                          <mat-option class="autoCompleteInfoResult smallInputInfo"
+                            disabled [innerHTML]="externalId_m2mInfo">
+                          </mat-option>
+                        }
+                        @if (externalId_m2mLoading) {
+                          <mat-option disabled>
+                            <mat-spinner diameter="20"></mat-spinner>
+                          </mat-option>
+                        }
+                      </mat-autocomplete>
+                    </mat-form-field>
+                  }
+                  @if (!annuaryEnabled) {
+                    <mat-form-field>
+                      <input type="text" #autoCompleteInputExternalIdM2M
+                        [placeholder]="'lang.IdMaarch2Maarch' | translate" matInput
+                        [formControl]="field.control">
+                      @if (!isEmptyValue(field.desc)) {
+                        <mat-hint align="end"
+                        [innerHTML]="field.desc"></mat-hint>
+                      }
+                    </mat-form-field>
+                  }
+                }
+                @if (field.id === 'addressCountry') {
+                  <mat-form-field>
+                    <!-- EDISSYUM - NCH01 Rajout de la possibilité de visualiser les contacts sans droits d'administration | Ajout readonly -->
+                    <input [readonly]="this.readOnlyMode" matInput #autoCompleteInput [formControl]="field.control" [placeholder]="field.label" [matAutocomplete]="matAutocompleteCountries">
+                    <mat-autocomplete #matAutocompleteCountries="matAutocomplete" isOpen="true" (optionSelected)="selectCountry($event)">
+                      @for (country of countriesFilteredResult | async; track country) {
+                        <mat-option [value]="country">
+                          {{country}}
+                        </mat-option>
+                      }
+                    </mat-autocomplete>
+                  </mat-form-field>
+                }
+                @if (field.id === 'addressPostcode') {
+                  <mat-form-field>
+                    <!-- EDISSYUM - NCH01 Rajout de la possibilité de visualiser les contacts sans droits d'administration | Ajout readonly -->
+                    <input [readonly]="this.readOnlyMode" matInput #autoCompleteInput [formControl]="field.control" [placeholder]="field.label" [matAutocomplete]="matAutocompletePostCode">
+                    <mat-autocomplete #matAutocompletePostCode="matAutocomplete" (optionSelected)="selectPostcode($event)">
+                      @for (postcode of postcodesFilteredResult | async; track postcode) {
+                        <mat-option [value]="postcode">
+                          {{postcode.postcode}} - {{postcode.town}}
+                        </mat-option>
+                      }
+                    </mat-autocomplete>
+                  </mat-form-field>
+                }
+                @if (field.id === 'addressTown') {
+                  <mat-form-field>
+                    <!-- EDISSYUM - NCH01 Rajout de la possibilité de visualiser les contacts sans droits d'administration | Ajout readonly -->
+                    <input [readonly]="this.readOnlyMode" matInput #autoCompleteInput [formControl]="field.control" [placeholder]="field.label" [matAutocomplete]="matAutocompletePostCodeTown">
+                    <mat-autocomplete #matAutocompletePostCodeTown="matAutocomplete" (optionSelected)="selectPostcode($event)">
+                      @for (postcode of postcodesTownFilteredResult | async; track postcode) {
+                        <mat-option [value]="postcode">
+                          {{postcode.town}} ({{postcode.postcode}})
+                        </mat-option>
+                      }
+                    </mat-autocomplete>
+                  </mat-form-field>
+                }
+                @if (field.id === 'correspondentsGroups') {
+                  <app-input-correspondent-group #appInputCorrespondentGroup [id]="contactId" [type]="'contact'" style="display: block;" (afterCorrespondentsGroupsLoaded)="handleCorrespondentsGroupsField($event,field)"></app-input-correspondent-group>
+                }
+              </p>
+            }
+            <!-- EDISSYUM - NCH01 Rajout de la possibilité de visualiser les contacts sans droits d'administration | Ajout de readOnlyMode dans le ngIF -->
+            @if (field.display && !this.readOnlyMode) {
+              <button [disabled]="!canDelete(field)" mat-icon-button matSuffix
+                class="warn" (click)="removeField(field)">
+                <mat-icon class="fa fa-trash"></mat-icon>
+              </button>
+            }
+          </mat-list-item>
+        }
+        @if (unit.id === 'address' && addressBANMode && ['addressAdditional1', 'addressAdditional2', 'sector'].indexOf(field.id) > -1) {
+          <mat-list-item class="contact-item">
+            @if (field.display) {
+              <p mat-line class="contact-content">
+                <mat-form-field>
+                  <!-- EDISSYUM - NCH01 Rajout de la possibilité de visualiser les contacts sans droits d'administration | Ajout readonly -->
+                  <input matInput [formControl]="field.control" [placeholder]="field.label"
+                    [required]="field.required" [readonly]="this.readOnlyMode">
+                  @if (field.control.hasError('required')) {
+                    <mat-error>
+                    {{'lang.requiredField' | translate}}</mat-error>
+                  }
+                </mat-form-field>
+              </p>
+            }
+            <!-- EDISSYUM - NCH01 Rajout de la possibilité de visualiser les contacts sans droits d'administration | Ajout de readOnlyMode dans le ngIF -->
+            @if (field.display && !this.readOnlyMode) {
+              <button [disabled]="!canDelete(field)" mat-icon-button matSuffix
+                class="warn" (click)="removeField(field)">
+                <mat-icon class="fa fa-trash"></mat-icon>
+              </button>
+            }
+          </mat-list-item>
+        }
+        @if (unit.id === 'address' && addressBANMode && i === 0) {
+          <mat-list-item>
+            <p mat-line class="contact-content">
+              <mat-form-field appearance='outline' class="smallInput">
+                <!-- EDISSYUM - NCH01 Rajout de la possibilité de visualiser les contacts sans droits d'administration | Ajout disabled -->
+                <button mat-button matSuffix [matMenuTriggerFor]="menuDep" [disabled]="this.readOnlyMode"
+                  (click)="$event.stopPropagation();" [title]="'lang.targetDepartment' | translate">
+                  {{addressBANCurrentDepartment}}&nbsp;<i class="fa fa-chevron-down"></i>
+                </button>
+                <mat-menu #menuDep="matMenu">
+                  @for (dep of departmentList; track dep) {
+                    <button mat-menu-item
+                    (click)="addressBANCurrentDepartment = dep">{{dep}}</button>
+                  }
+                </mat-menu>
+                <mat-icon class="fa fa-search" matPrefix
+                style="font-size: 15px; color: #3A7C00"></mat-icon>
+                <!-- EDISSYUM - NCH01 Rajout de la possibilité de visualiser les contacts sans droits d'administration | Ajout readonly -->
+                <input type="text" #autoCompleteInput [placeholder]="'lang.searchAddressBan' | translate"
+                  matInput [formControl]="addressBANControl" [matAutocomplete]="auto"
+                  (click)="$event.stopPropagation()" (focus)="resetAutocompleteAddressBan()"
+                  maxlength="128" [readonly]="this.readOnlyMode">
+                <mat-autocomplete #auto="matAutocomplete"
+                  (optionSelected)="selectAddressBan($event)">
+                  @if (addressSectorResult.length > 0 && !addressLoading) {
+                    <mat-label class="title-ban">{{'lang.labelSectors' | translate | uppercase}}</mat-label>
+                    @for (addressSectorResult of addressSectorFilteredResult | async; track addressSectorResult) {
+                      <mat-option
+                        [value]="addressSectorResult">
+                        {{addressSectorResult.address}}
+                      </mat-option>
+                    }
+                  }
+                  @if (addressBANResult.length > 0 && !addressLoading) {
+                    <mat-label class="title-ban">{{'lang.labelBAN' | translate | uppercase}}</mat-label>
+                    @for (addressBANResult of addressBANFilteredResult | async; track addressBANResult) {
+                      <mat-option
+                        [value]="addressBANResult">
+                        {{addressBANResult.address}}
+                      </mat-option>
+                    }
+                  }
+                  @if (addressBANResult.length === 0 && !addressLoading) {
+                    <mat-option class="autoCompleteInfoResult smallInputInfo"
+                      disabled
+                      [innerHTML]="addressBANInfo">
+                    </mat-option>
+                  }
+                  @if (addressLoading) {
+                    <mat-option disabled>
+                      <mat-spinner diameter="20"></mat-spinner>
+                    </mat-option>
+                  }
+                </mat-autocomplete>
+              </mat-form-field>
+              @if (!emptyAddress()) {
+                <mat-card style="margin:10px;">
+                  <mat-list-item class="contact-address" (click)="goTo()"
+                    [title]="'lang.address' | translate">
+                    <mat-icon mat-list-icon style="color: #3A7C00"
+                    class="contact-group fas fa-map-marker-alt"></mat-icon>
+                    @if (!isEmptyValue(getValue('addressAdditional1'))) {
+                      <p mat-line class="contact-content">
+                        {{getValue('addressAdditional1')}}
+                      </p>
+                    }
+                    <p mat-line class="contact-content">
+                      {{getValue('addressNumber')}}
+                      {{getValue('addressStreet')}}
+                    </p>
+                    @if (!isEmptyValue(getValue('addressAdditional2'))) {
+                      <p mat-line class="contact-content">
+                        {{getValue('addressAdditional2')}}
+                      </p>
+                    }
+                    <p mat-line class="contact-content">
+                      {{getValue('addressPostcode')}}
+                      {{getValue('addressTown')}}
+                    </p>
+                    <p mat-line class="contact-content">
+                    {{getValue('addressCountry')}} </p>
+                  </mat-list-item>
+                </mat-card>
+              }
+            </p>
+          </mat-list-item>
+        }
+      }
+    </mat-list>
+  </div>
+}
+}
+</div>
+<!-- EDISSYUM - NCH01 Rajout de la possibilité de visualiser les contacts sans droits d'administration | Ajout *ngIf -->
+@if (!this.readOnlyMode) {
+  <div style="text-align:center;padding-top: 10px;">
+    <button mat-raised-button type="button"
+    [matMenuTriggerFor]="menu">{{'lang.moreInfos' | translate}}...</button>
+    @if (actionButton) {
+      <button mat-raised-button class="primary" type="button" (click)="onSubmit()">{{'lang.validate' | translate}}</button>
+    }
+  </div>
+}
+}

@@ -1,0 +1,41 @@
+@if (resources.length > 0) {
+  <div style="width: 100%;overflow: auto;">
+    @for (resource of resources; track resource; let it = $index) {
+      <div class="resource" [class.resource-link]="route !== null" role="listitem" (mouseenter)="resource.hovered=true" (mouseleave)="resource.hovered=false" (click)="route !== null ? goTo(resource): false">
+        @for (col of displayColumns; track col; let i = $index) {
+          @if (['contactTitle'].indexOf(col) === -1) {
+            <div class="item">
+              @if (!isDate(resource[col], col)) {
+                <span [title]="col !== 'contactLabel' ? resource[col] : resource['contactTitle']">
+                  {{!functionsService.empty(resource[col]) ? (resource[col] | shorten : 50:'...') : ('lang.undefined' | translate)}}
+                </span>
+              }
+              @if (isDate(resource[col], col)) {
+                <span class="date-item" [title]="resource[col] | fullDate">
+                  {{resource[col] | timeAgo}}
+                </span>
+              }
+            </div>
+          }
+        }
+        @if (!functionsService.empty(viewDocRoute)) {
+          <div class="view-action" [style.visibility]="resource.hovered ? 'initial': 'hidden'" (mouseenter)="viewThumbnail($event,resource);" (mouseleave)="closeThumbnail();">
+            <i class="fa fa-eye view-action-icon" style="color: #3A7C00"></i>
+          </div>
+        }
+        @if (it===0) {
+          <i class="{{icon}} tile-icon primary" (click)="$event.stopPropagation()"></i>
+        }
+      </div>
+    }
+  </div>
+  @if (showThumbnail) {
+    <mat-card id="viewThumbnail" style="top:0px;right:0px;position: fixed;margin-left: 1px;z-index: 3;">@if (thumbnailUrl !== '') {
+      <img style="max-height: 100vh;" [src]="thumbnailUrl | secureUrl | async" />
+    }</mat-card>
+  }
+} @else {
+  <div class="empty-data">
+    {{'lang.noDataAvailable' | translate}}
+  </div>
+}

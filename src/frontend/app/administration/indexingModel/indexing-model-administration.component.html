@@ -1,0 +1,146 @@
+<mat-sidenav-container autosize class="maarch-container">
+  <mat-sidenav-content>
+    <div class="bg-head">
+      <div class="bg-head-title" [class.customContainerRight]="appService.getViewMode()">
+        <div class="bg-head-title-label">
+          <app-header-left></app-header-left>
+        </div>
+        <div class="bg-head-title-tool">
+          <app-header-right></app-header-right>
+        </div>
+      </div>
+      <div class="bg-head-content" [class.fullContainer]="appService.getViewMode()">
+      </div>
+    </div>
+    <div class="container" [class.fullContainer]="appService.getViewMode()">
+      <div class="container-content">
+        @if (loading) {
+          <div style="display:flex;height:100%;">
+            <mat-spinner style="margin:auto;"></mat-spinner>
+          </div>
+        }
+        @if (!loading) {
+          <mat-card class="card-app-content">
+            <div style="display: flex;">
+              <mat-form-field>
+                <mat-label>{{'lang.category_id' | translate}}</mat-label>
+                <mat-select name="category" [(ngModel)]="indexingModel.category"
+                  [placeholder]="'lang.category_id' | translate" required (selectionChange)="changeCategory($event)">
+                  @for (category of categoriesList; track category; let i = $index) {
+                    <mat-option [value]="category.id">
+                      {{category.label}}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div style="display: flex;">
+              <div style="flex:1;">
+                <mat-form-field class="indexingModelLabel" appearance="outline">
+                  <mat-label>{{'lang.modelName' | translate}}</mat-label>
+                  <input matInput name="label" [(ngModel)]="indexingModel.label">
+                </mat-form-field>
+              </div>
+            </div>
+            <div class="options">
+              <div class="title">
+                {{'lang.options' | translate}}
+                <div class="title-divider"></div>
+              </div>
+              <div class="col-sm-6" style="white-space:nowrap;text-align:center;">
+                <mat-slide-toggle class="primary" name="default" [(ngModel)]="indexingModel.default" (ngModelChange)="toggleEntities($event)">
+                  {{'lang.defaultModel' | translate}}
+                </mat-slide-toggle>
+              </div>
+              <div class="col-sm-6" style="white-space:nowrap;text-align:center;">
+                <div>
+                  <mat-slide-toggle class="primary" name="mandatoryFile" [(ngModel)]="indexingModel.mandatoryFile">
+                    {{'lang.mandatoryFile' | translate}}
+                  </mat-slide-toggle>
+                </div>
+              </div>
+              @if (ladEnabled) {
+                <div class="col-sm-4" style="white-space:nowrap;text-align:center;">
+                  <div>
+                    <mat-slide-toggle class="primary" name="ladProcessing" [(ngModel)]="indexingModel.ladProcessing">
+                      {{'lang.ladProcessing' | translate}}
+                    </mat-slide-toggle>
+                  </div>
+                </div>
+              }
+            </div>
+            <!-- EDISSYUM - NCH01 Ajout d'un paramètre pour ne pas remonter les rôles de diffusion dans l'indexation -->
+            <!-- EDISSYUM - NCH01 Ajout d'un paramètre pour forcer l'utilisateur courant en tant qu'attributaire -->
+            <!-- EDISSYUM - NCH01 Ajout d'un paramètre pour envoyer le document principal lors de l'envoi au visa -->
+            <!-- EDISSYUM - NCH01 Rajout d'une option pour pouvoir générer un AR par modèle d'enregistrement -->
+              <div class="options" style="display: block!important;">
+                  <div class="title" >
+                      {{'lang.additional_options' | translate}}
+                      <div class="title-divider"></div>
+                  </div>
+                  <div style="white-space:nowrap;text-align:left;">
+                      <div>
+                          <mat-slide-toggle color="primary" name="forceCurrentUser" [title]="'lang.forceCurrentUser' | translate" [(ngModel)]="indexingModel.forceCurrentUser">
+                              {{'lang.forceCurrentUser' | translate}}
+                          </mat-slide-toggle>
+                      </div>
+                  </div>
+                  <div style="white-space:nowrap;text-align:left; margin-top: 15px;">
+                      <div>
+                          <mat-slide-toggle color="primary" name="noDiffusionRole" [title]="'lang.noDiffusionRole' | translate" [(ngModel)]="indexingModel.noDiffusionRole">
+                              {{'lang.noDiffusionRole' | translate}}
+                          </mat-slide-toggle>
+                      </div>
+                  </div>
+                  <div style="white-space:nowrap;text-align:left; margin-top: 15px;">
+                      <div>
+                          <mat-slide-toggle color="primary" name="sendMainDocParaph" [title]="'lang.sendMainDocParaph' | translate" [(ngModel)]="indexingModel.sendMainDocParaph">
+                              {{'lang.sendMainDocParaph' | translate}}
+                          </mat-slide-toggle>
+                      </div>
+                  </div>
+                  <div style="white-space:nowrap;text-align:left; margin-top: 15px;">
+                      <div>
+                          <mat-slide-toggle color="primary" name="generateAr" [title]="'lang.generateAr' | translate" [(ngModel)]="indexingModel.generateAr">
+                              {{'lang.generateAr' | translate}}
+                          </mat-slide-toggle>
+                      </div>
+                  </div>
+              </div>
+            <!-- END EDISSYUM - NCH01 -->
+            <mat-tab-group>
+              <mat-tab [label]="'lang.indexingForm' | translate">
+                <app-indexing-form #indexingForm [indexingFormId]="indexingModel.id" [adminMode]="true">
+                </app-indexing-form>
+                <div style="position: fixed; bottom: 0px; z-index: 1; background-color: white; width: 100%;">
+                  <button mat-raised-button class="primary" (click)="onSubmit()" style="left: 20%;"
+                  [disabled]="(!indexingForm.isModified() && !isModified()) || indexingModel.label === ''">{{creationMode ? ('lang.save' | translate) : ('lang.update' | translate)}}</button>
+                </div>
+              </mat-tab>
+            </mat-tab-group>
+          </mat-card>
+        }
+      </div>
+    </div>
+  </mat-sidenav-content>
+  <mat-sidenav #snav2 [mode]="appService.getViewMode() ? 'over' : 'side'" [fixedInViewport]="appService.getViewMode()"
+    fixedTopGap="56" position='end' opened class="col-md-4 col-sm-12">
+    <mat-tab-group>
+      <mat-tab [label]="'lang.entities' | translate">
+        <app-maarch-flat-tree #maarchTree></app-maarch-flat-tree>
+      </mat-tab>
+      <mat-tab [label]="'lang.availableFields' | translate">
+        @if (indexingForm !== undefined) {
+          <app-field-list [dataFields]="indexingForm.getAvailableFields()">
+          </app-field-list>
+        }
+      </mat-tab>
+      <mat-tab [label]="'lang.availableCustomFields' | translate">
+        @if (indexingForm !== undefined) {
+          <app-field-list
+          [dataCustomFields]="indexingForm.getAvailableCustomFields()"></app-field-list>
+        }
+      </mat-tab>
+    </mat-tab-group>
+  </mat-sidenav>
+</mat-sidenav-container>

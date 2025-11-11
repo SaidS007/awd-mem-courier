@@ -1,0 +1,239 @@
+@if (!loading) {
+  <mat-list>
+    @if (!lockVisaCircuit) {
+      <form class="form-horizontal">
+        @if (adminMode && minimumVisaRole !== null && maximumSignRole !== null && workflowSignatoryRole !== '') {
+          @if (!loading && workflowParametersNotValid()) {
+            <app-maarch-message
+              mode="danger">
+              @if (!visaNumberCorrect) {
+                <p>
+                  {{'lang.notEnoughVisaUser' | translate}} ({{'lang.requiredVisaUser' | translate: {min: minimumVisaRole} }})
+                </p>
+              }
+              @if (!signNumberCorrect) {
+                <p>
+                  {{'lang.tooManySignUser' | translate}} ({{'lang.authorizedSignUser' | translate: {max: maximumSignRole} }})
+                </p>
+              }
+              @if (!lastOneIsSign && lastOneMustBeSignatory) {
+                <p>
+                  {{'lang.lastNotSignatory' | translate}}
+                </p>
+              }
+              @if (!atLeastOneSign) {
+                <p>{{'lang.signUserRequired' | translate}}</p>
+              }
+            </app-maarch-message>
+          }
+        }
+        <div class="form-group">
+          <div [ngClass]="[visaWorkflow.items.length > 0 && showListModels ? 'col-md-11' : 'col-md-12']">
+            @if (adminMode) {
+              <mat-form-field appearance="outline">
+                <input type="text" #searchVisaSignUserInput matInput placeholder="{{'lang.addUsers' | translate}}"
+                  id="searchVisaSignUserInput" [formControl]="searchVisaSignUser" [matAutocomplete]="autoGroup">
+                <mat-autocomplete #autoGroup="matAutocomplete" (optionSelected)="addItemToWorkflow($event.option.value)"
+                  (opened)="initFilterVisaModelList()">
+                  @if (visaModelListNotLoaded) {
+                    <mat-option disabled>
+                      <div style="display: flex;justify-content: center;">
+                        <mat-spinner diameter="35"></mat-spinner>
+                      </div>
+                    </mat-option>
+                  }
+                  @if ((filteredPublicModels | async)?.length > 0) {
+                    <mat-optgroup [label]="'lang.publicModel' | translate"
+                      class="visaSignList">
+                      @for (model of filteredPublicModels | async | sortBy : 'label'; track model) {
+                        <mat-option [value]="model">
+                          {{model.label}}
+                        </mat-option>
+                      }
+                    </mat-optgroup>
+                  }
+                  @if ((filteredPrivateModels | async)?.length > 0) {
+                    <mat-optgroup [label]="'lang.privateModel' | translate"
+                      class="visaSignList">
+                      @for (model of filteredPrivateModels | async | sortBy : 'label'; track model) {
+                        <mat-option [value]="model">
+                          <div style="display: flex;align-items: center;">
+                            <div style="flex:1">
+                              {{model.label}}
+                            </div>
+                            <button mat-icon-button class="warn"
+                              (click)="$event.stopPropagation();deletePrivateModel(model)">
+                              <mat-icon class="fa fa-trash" style="margin: 0px;"></mat-icon>
+                            </button>
+                          </div>
+                        </mat-option>
+                      }
+                    </mat-optgroup>
+                  }
+                  @if ((filteredSignVisaUsers | async)?.length > 0) {
+                    <mat-optgroup [label]="('lang.visaUser' | translate) + ' / ' + ('lang.signUser' | translate)"
+                      class="visaSignList">
+                      @for (user of filteredSignVisaUsers | async | sortBy : 'label'; track user) {
+                        <mat-option [value]="user">
+                          {{user.label}}&nbsp;@if (!functions.empty(user.entity)) {
+                          <small>({{user.entity}})</small>
+                        }
+                      </mat-option>
+                    }
+                  </mat-optgroup>
+                }
+              </mat-autocomplete>
+            </mat-form-field>
+          }
+        </div>
+        @if (visaWorkflow.items.length > 0 && showListModels && adminMode) {
+          <div class="col-md-1">
+            <button mat-icon-button style="margin-left: -22px; color: #3A7C00"
+              (click)="$event.stopPropagation();openPromptSaveModel()" title="{{'lang.saveAsPrivateModel' | translate}}">
+              <mat-icon class="fa fa-copy" style="font-size: 20px;"></mat-icon>
+            </button>
+          </div>
+        }
+      </div>
+    </form>
+  }
+  <!--<div class="alert alert-danger" *ngIf="visaWorkflow.itemRemovedFromVisaTemplate.length > 0" [innerHTML]="('lang.itemRemovedFromVisaTemplate' | translate) + ' : ' + visaWorkflow.itemRemovedFromVisaTemplate.join(', ')"></div>-->
+  <div cdkDropList #dataAvailableList="cdkDropList" [cdkDropListData]="visaWorkflow.items" class="cdk-list"
+    (cdkDropListDropped)="drop($event)" [cdkDropListDisabled]="!adminMode || lockVisaCircuit">
+    @if (adminMode && visaWorkflow.items.length === 0) {
+      <div class="emptyContent">
+        {{'lang.noVisaWorkflow' | translate}}
+      </div>
+    }
+    @if (!adminMode && visaWorkflow.items.length === 0) {
+      <div class="emptyContent">
+        {{'lang.cannotAddVisaCircuit' | translate}}
+      </div>
+    }
+    @for (diffusion of visaWorkflow.items; track diffusion; let i = $index) {
+      <mat-list-item disableRipple cdkDrag
+        class="columns workflow" [cdkDragDisabled]="!canManageUser(diffusion, i)"
+        [class.notDraggable]="!canManageUser(diffusion, i) || lockVisaCircuit" [class.notEditable]="!adminMode"
+        [class.processed]="diffusion.process_date != null && (!stringIncludes(diffusion.process_comment, 'lang.hasInterruptedWorkflow' | translate) && !stringIncludes(diffusion.process_comment, 'lang.visaWorkflowInterrupted' | translate))"
+        [class.interrupt]="diffusion.process_date != null && (stringIncludes(diffusion.process_comment, 'lang.hasInterruptedWorkflow' | translate) || stringIncludes(diffusion.process_comment, 'lang.visaWorkflowInterrupted' | translate))">
+        @if (getCurrentVisaUserIndex() === i && (!adminMode || target === 'signatureBook' || target === 'action')) {
+          <mat-icon
+            class="fa fa-chevron-right fa-2x" mat-list-icon style="color:#006841"
+            >
+          </mat-icon>
+        }
+        <mat-icon class="fa fa-2x" [class.avatar]="!functions.empty(diffusion.picture)"
+          [class.fa-user]="functions.empty(diffusion.picture) && (diffusion.isValid || (diffusion.process_date === null && diffusion.delegatedBy === null))"
+          [class.fa-user-friends]="diffusion.process_date != null && diffusion.delegatedBy !== null"
+          [class.fa-user-slash]="!diffusion.isValid"
+          [title]="!diffusion.isValid ? ('lang.userNotValid' | translate) : ''" mat-list-icon
+          [class.invalid]="!diffusion.hasPrivilege || !diffusion.isValid"
+          [style.background-image]="!functions.empty(diffusion.picture) ? 'url('+diffusion.picture+')' : ''"
+          style="position: relative; color: #3A7C00">
+          @if (!functions.empty(diffusion.process_comment)) {
+            <i class="far fa-comment-dots commentBubble"
+            [matTooltip]="diffusion.process_comment"></i>
+          }
+        </mat-icon>
+        @if ((!adminMode || diffusion.process_date != null) && diffusion.isValid) {
+          <mat-icon mat-list-icon class="fa-2x fa"
+            [title]="diffusion.process_comment !== null ? diffusion.process_comment : ''"
+            [class.fa-hourglass]="diffusion.process_date == null"
+            [class.fa-thumbs-up]="diffusion.process_date != null && !stringIncludes(diffusion.process_comment, 'lang.hasInterruptedWorkflow' | translate) && !stringIncludes(diffusion.process_comment, 'lang.visaWorkflowInterrupted' | translate)"
+            [class.fa-hand-paper]="diffusion.process_date != null && stringIncludes(diffusion.process_comment, 'lang.hasInterruptedWorkflow' | translate)"
+            [class.fa-times]="diffusion.process_date != null && stringIncludes(diffusion.process_comment, 'lang.visaWorkflowInterrupted' | translate)"
+            [class.valid]="diffusion.process_date != null && !stringIncludes(diffusion.process_comment, 'lang.hasInterruptedWorkflow' | translate) && !stringIncludes(diffusion.process_comment, 'lang.visaWorkflowInterrupted' | translate)"
+            [class.invalid]="diffusion.process_date != null && (stringIncludes(diffusion.process_comment, 'lang.hasInterruptedWorkflow' | translate) || stringIncludes(diffusion.process_comment, 'lang.visaWorkflowInterrupted' | translate))"
+          style="opacity:0.5;"></mat-icon>
+        }
+        <div mat-line class="workflowLine">
+          <div class="workflowLineContainer">
+            <div class="workflowLineLabel" [title]="diffusion.labelToDisplay" [class.unauthorized]="!diffusion.hasPrivilege || !diffusion.isValid">
+              {{diffusion.labelToDisplay}}
+              @if (diffusion.process_date != null && diffusion.delegatedBy !== null) {
+                <mat-icon mat-list-icon class="fas fa-exclamation-circle"
+                  [title]="('lang.insteadOf' | translate) + ' ' + diffusion.delegatedBy"
+                style="opacity:0.5;font-size: 125%;height: 15px;color: red;cursor: help;"></mat-icon>
+              }
+            </div>
+            <div class="workflowLineSubLabel"
+              [class.unauthorized]="!diffusion.hasPrivilege || !diffusion.isValid">
+              {{diffusion.item_entity}}
+            </div>
+            @if ((showComment && ((adminMode && functions.empty(diffusion.process_date)) || (getCurrentVisaUserIndex() === i && !functions.empty(diffusion.process_comment)))) && diffusion.hasPrivilege && diffusion.isValid || target === 'action') {
+              <div class="workflowLineSubLabel"
+                >
+                <mat-form-field>
+                  <input matInput class="comment" maxlength="255"
+                    [disabled]="!adminMode || diffusion.process_date != null || (target === 'signatureBook' && getCurrentVisaUserIndex() === i)"
+                    [placeholder]="'lang.visaNote' | translate" [(ngModel)]="diffusion.process_comment" title="{{!functions.empty(diffusion.process_comment) ? diffusion.process_comment : null}}">
+                </mat-form-field>
+              </div>
+            }
+            @if (diffusion.process_date != null && !stringIncludes(diffusion.process_comment, 'lang.visaWorkflowInterrupted' | translate) && !stringIncludes(diffusion.process_comment, 'lang.hasInterruptedWorkflow' | translate)) {
+              <div
+                class="workflowLineProcessDate accent" title='{{diffusion.process_date | fullDate}}' >
+                {{((functions.empty(diffusion.process_date) && diffusion.requested_signature) || diffusion.signatory) ? ('lang.signedUserDate' | translate) : ('lang.approvedUserDate' | translate)}} {{diffusion.process_date
+              | timeAgo : 'full'}}</div>
+            }
+            @if (diffusion.process_date != null && stringIncludes(diffusion.process_comment, 'lang.hasInterruptedWorkflow' | translate)) {
+              <div
+                class="workflowLineProcessDate warn" title='{{diffusion.process_date | fullDate}}'>
+              {{'lang.interrupted' | translate}} {{diffusion.process_date | timeAgo : 'full'}}</div>
+            }
+          </div>
+          @if (diffusion.hasPrivilege && diffusion.isValid) {
+            <div>
+              <ng-container>
+                <button class="currentRoleButton"
+                  [color]="((functions.empty(diffusion.process_date) && diffusion.requested_signature) || diffusion.signatory) ? 'primary': '' "
+                  [disabled]="!canManageUser(diffusion, i) || lockVisaCircuit" mat-raised-button
+                  title="{{'lang.' + diffusion.currentRole + 'User' | translate}}"
+                (click)="changeRole(i)">{{'lang.' + diffusion.currentRole + 'User' | translate}}</button>
+              </ng-container>
+            </div>
+          }
+          @if (!diffusion.hasPrivilege) {
+            <div class="invalid">
+              {{'lang.noPrivileges' | translate}}
+            </div>
+          }
+          @if (!diffusion.isValid) {
+            <div class="invalid invalidMsg">
+              {{'lang.userNotValid' | translate}}
+            </div>
+          }
+        </div>
+        @if (getCurrentVisaUserIndex() === i && (target === 'signatureBook' || target === 'action') && diffusion.item_id !== headerService.user.id) {
+          <div mat-line class="workflowLine" style="color: red;font-size: 12px;padding-bottom: 5px;">
+            {{'lang.signInsteadOf' | translate}}&nbsp;<b style="overflow: hidden;text-overflow: ellipsis;" [title]="diffusion.labelToDisplay">{{diffusion.labelToDisplay}}</b>
+          </div>
+        }
+        @if (canManageUser(diffusion, i) && !lockVisaCircuit) {
+          <button mat-icon-button (click)="deleteItem(i)">
+            <mat-icon class="fa fa-times" style="color:#8e3e52"></mat-icon>
+          </button>
+        }
+      </mat-list-item>
+    }
+  </div>
+</mat-list>
+}
+@if (loading) {
+  <div style="display:flex;padding: 10px;">
+    <mat-spinner style="margin:auto;"></mat-spinner>
+  </div>
+}
+@if (!loading && hasHistory) {
+  <mat-divider></mat-divider>
+  <mat-expansion-panel style="box-shadow: none;">
+    <mat-expansion-panel-header>
+      <mat-panel-title class="primary">
+        {{'lang.showVisaWorkflowHistory' | translate}}
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <ng-template matExpansionPanelContent>
+      <app-history-visa-workflow [resId]="resId" style="display: contents;"></app-history-visa-workflow>
+    </ng-template>
+  </mat-expansion-panel>
+}

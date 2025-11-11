@@ -1,0 +1,10 @@
+<div class="doc-container">
+  @if (!loading) {
+    <app-document-viewer #appDocumentViewer class="documentViewer"
+      [editMode]="false"
+      [resId]="resId"
+      [title]="resId"
+      [zoom]="0.5">
+    </app-document-viewer>
+  }
+</div>

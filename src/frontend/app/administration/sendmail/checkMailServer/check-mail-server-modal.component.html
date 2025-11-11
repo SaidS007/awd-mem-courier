@@ -1,0 +1,29 @@
+<div class="mat-dialog-content-container">
+  <h1 mat-dialog-title>{{'lang.mailServerTest' | translate}}</h1>
+  <mat-dialog-content class="modal-container">
+    @if (loading) {
+      <div class="msg-loading">
+        <i class="fas fa-2x fa-paper-plane" style="padding-right: 10px; color: #3A7C00"></i>
+        <div [innerHTML]="statusMsg"></div>
+      </div>
+    }
+    @if (!loading && error === null) {
+      <app-maarch-message mode="success" [content]="statusMsg"></app-maarch-message>
+    }
+    @if (!loading && error !== null) {
+      <app-maarch-message mode="danger" [content]="statusMsg"></app-maarch-message>
+    }
+
+    @if (!loading && error !== null) {
+      <div class="bash">
+        {{error}}
+      </div>
+    }
+  </mat-dialog-content>
+  <span class="divider-modal"></span>
+  <div mat-dialog-actions class="actions">
+    @if (!loading && error !== null) {
+      <button mat-raised-button (click)="dialogRef.close()">{{'lang.close' | translate}}</button>
+    }
+  </div>
+</div>

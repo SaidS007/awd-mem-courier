@@ -1,0 +1,163 @@
+@if (!loading) {
+  <mat-list>
+    <form class="form-horizontal">
+      <div class="form-group">
+        <div [ngClass]="[avisWorkflow.items.length > 0 && showListModels ? 'col-md-11' : 'col-md-12']">
+          @if (adminMode) {
+            <mat-form-field appearance="outline">
+              <input type="text" #searchAvisUserInput matInput placeholder="Ajouter des personnes" id="searchAvisUserInput"
+                [formControl]="searchAvisUser" [matAutocomplete]="autoGroup">
+              <mat-autocomplete #autoGroup="matAutocomplete" (optionSelected)="addItemToWorkflow($event.option.value)"
+                (opened)="initFilterAvisModelList()">
+                @if (avisModelListNotLoaded) {
+                  <mat-option disabled>
+                    <div style="display: flex;justify-content: center;">
+                      <mat-spinner diameter="35"></mat-spinner>
+                    </div>
+                  </mat-option>
+                }
+                @if ((filteredPublicModels | async)?.length > 0) {
+                  <mat-optgroup [label]="'lang.publicModel' | translate"
+                    class="avisSignList">
+                    @for (model of filteredPublicModels | async | sortBy : 'label'; track model) {
+                      <mat-option [value]="model">
+                        {{model.label}}
+                      </mat-option>
+                    }
+                  </mat-optgroup>
+                }
+                @if ((filteredPrivateModels | async)?.length > 0) {
+                  <mat-optgroup [label]="'lang.privateModel' | translate"
+                    class="avisSignList">
+                    @for (model of filteredPrivateModels | async | sortBy : 'label'; track model) {
+                      <mat-option [value]="model">
+                        <div style="display: flex;align-items: center;">
+                          <div style="flex:1">
+                            {{model.label}}
+                          </div>
+                          <button mat-icon-button class="warn"
+                            (click)="$event.stopPropagation();deletePrivateModel(model)">
+                            <mat-icon class="fa fa-trash" style="margin: 0px;"></mat-icon>
+                          </button>
+                        </div>
+                      </mat-option>
+                    }
+                  </mat-optgroup>
+                }
+                @if ((filteredSignAvisUsers | async)?.length > 0) {
+                  <mat-optgroup [label]="'lang.user' | translate | titlecase"
+                    class="avisSignList">
+                    @for (user of filteredSignAvisUsers | async | sortBy : 'label'; track user) {
+                      <mat-option [value]="user">
+                        {{user.label}} @if (!functions.empty(user.entity)) {
+                        <small>({{user.entity}})</small>
+                      }
+                    </mat-option>
+                  }
+                </mat-optgroup>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
+        }
+      </div>
+      @if (avisWorkflow.items.length > 0 && showListModels && adminMode) {
+        <div class="col-md-1">
+          <button mat-icon-button style="margin-left: -22px; color: #3A7C00"
+            (click)="$event.stopPropagation();openPromptSaveModel()" title="{{'lang.saveAsPrivateModel' | translate}}">
+            <mat-icon class="fa fa-copy" style="font-size: 20px;"></mat-icon>
+          </button>
+        </div>
+      }
+    </div>
+  </form>
+  <div cdkDropList #dataAvailableList="cdkDropList" [cdkDropListData]="avisWorkflow.items" class="cdk-list"
+    (cdkDropListDropped)="drop($event)" [cdkDropListDisabled]="!adminMode">
+    @if (adminMode && avisWorkflow.items.length === 0) {
+      <div class="emptyContent">
+        {{'lang.noCircuitAvailable' | translate}}
+      </div>
+    }
+    @if (!adminMode && avisWorkflow.items.length === 0) {
+      <div class="emptyContent">
+        {{'lang.cannotAddAvisCircuit' | translate}}
+      </div>
+    }
+    @for (diffusion of avisWorkflow.items; track diffusion; let i = $index) {
+      <mat-list-item disableRipple cdkDrag class="columns workflow"
+        [cdkDragDisabled]="!adminMode || !functions.empty(diffusion.process_date)"
+        [class.notDraggable]="!adminMode || !functions.empty(diffusion.process_date)"
+        [class.notEditable]="!adminMode" [class.processed]="diffusion.process_date !== null && diffusion.process_date !== undefined ">
+        @if (getCurrentAvisUserIndex() === i && !adminMode) {
+          <mat-icon class="fa fa-chevron-right fa-2x"
+            mat-list-icon style="color:#006841"
+            >
+          </mat-icon>
+        }
+        <mat-icon
+          [ngClass]="{'fa fa-user fa-2x': functions.empty(diffusion.picture),'avatar': !functions.empty(diffusion.picture)}"
+          mat-list-icon class="primary"
+          [class.invalid]="!diffusion.hasPrivilege || !diffusion.isValid"
+          [style.background-image]="!functions.empty(diffusion.picture) ? 'url('+diffusion.picture+')' : ''">
+        </mat-icon>
+        @if (!adminMode || diffusion.process_date !== null && diffusion.process_date !== undefined ) {
+          <mat-icon mat-list-icon class="fa-2x far" [class.fa-hourglass]="diffusion.process_date === null"
+            [class.fa-thumbs-up]="diffusion.process_date !== null && diffusion.process_date !== undefined " [class.valid]="diffusion.process_date !== null && diffusion.process_date !== undefined "
+          style="opacity:0.5;"></mat-icon>
+        }
+        <div mat-line class="workflowLine">
+          <div class="workflowLineContainer">
+            <div class="workflowLineLabel" [title]="diffusion.labelToDisplay" [class.unauthorized]="!diffusion.hasPrivilege || !diffusion.isValid">
+              {{diffusion.labelToDisplay}}
+              @if (diffusion.process_date !== null && diffusion.process_date !== undefined  && diffusion.delegatedBy !== null && diffusion.delegatedBy !== undefined ) {
+                <mat-icon mat-list-icon class="fas fa-exclamation-circle"
+                  [title]="('lang.insteadOf' | translate) + ' ' + diffusion.delegatedBy"
+                style="opacity:0.5;font-size: 125%;height: 15px;color: red"></mat-icon>
+              }
+            </div>
+            <div class="workflowLineSubLabel" [class.unauthorized]="!diffusion.hasPrivilege || !diffusion.isValid">
+              {{diffusion.item_entity}}
+            </div>
+            @if (diffusion.process_date !== null && diffusion.process_date !== undefined ) {
+              <div class="workflowLineProcessDate accent"
+                title='{{diffusion.process_date | fullDate}}'>{{'lang.avisSent' | translate}} {{diffusion.process_date
+              | timeAgo : 'full'}}</div>
+            }
+          </div>
+          @if (mode === 'parallel') {
+            <div>
+              <button class="currentRoleButton primary"
+              [disabled]="!adminMode || !functions.empty(diffusion.process_date)" mat-raised-button [matMenuTriggerFor]="menu" [title]="getRoleLabel(diffusion.item_mode)">{{getRoleLabel(diffusion.item_mode)}}</button>
+              <mat-menu #menu="matMenu">
+                @for (role of availableRoles; track role) {
+                  <button mat-menu-item (click)="changeRole(role, i)">{{role.label}}</button>
+                }
+              </mat-menu>
+            </div>
+          }
+          @if (!diffusion.hasPrivilege) {
+            <div class="invalid">
+              {{'lang.noPrivileges' | translate}}
+            </div>
+          }
+          @if (!diffusion.isValid) {
+            <div class="invalid">
+              {{'lang.userNotValid' | translate}}
+            </div>
+          }
+        </div>
+        @if (adminMode && functions.empty(diffusion.process_date)) {
+          <button mat-icon-button
+            (click)="deleteItem(i)">
+            <mat-icon class="fa fa-times" style="color:#8e3e52"></mat-icon>
+          </button>
+        }
+      </mat-list-item>
+    }
+  </div>
+</mat-list>
+}
+@if (loading) {
+  <div style="display:flex;padding: 10px;">
+    <mat-spinner style="margin:auto;"></mat-spinner>
+  </div>
+}

@@ -1,0 +1,28 @@
+<mat-toolbar class="primary stamps-header" [title]="'lang.myStamps' | translate" [attr.aria-label]="'lang.myStamps' | translate">
+  <mat-icon class="fa fa-pen-nib material-icons" aria-hidden="true"></mat-icon>
+  <span role="heading">{{'lang.myStamps' | translate}}</span>
+</mat-toolbar>
+<div class="component-container">
+  @if (userStamps.length > 0) {
+    <div class="stamps-container">
+      @for (stamp of userStamps; track stamp) {
+        <button
+          mat-raised-button
+          class="stamp-button"
+          [title]="'lang.applyStamp' | translate"
+          [style.backgroundImage]="'url(' + (stamp.contentUrl | secureUrl | async) + ')'"
+          (click)="signWithStamp(stamp)"
+        ></button>
+      }
+    </div>
+  }
+  @if (userStamps.length === 0) {
+    <div
+      class="no-stamp"
+      [title]="'lang.noStamp' | translate"
+      [attr.aria-label]="'lang.noStamp' | translate">
+      <mat-icon class="fa fa-ban" aria-hidden="true"></mat-icon>
+      <span>{{'lang.noStamp' | translate}}</span>
+    </div>
+  }
+</div>

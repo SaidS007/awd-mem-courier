@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ROOT>
+    <LOGGING>false</LOGGING> <!-- Option to enable logging into technique.log | true or false -->
+    <EXPORT_ZIP>
+        <ENABLED>false</ENABLED> <!-- Option to export into ZIP file instead of PDF | true or false -->
+        <DATETIMESTAMP>Ymd_His</DATETIMESTAMP> <!-- Choose the format of the date to name the zip. Use PHP format -->
+    </EXPORT_ZIP>
+    <DESTINATION>
+        <path>/var/share/export/</path> <!-- path of the destination folder for the exported doc -->
+    </DESTINATION>
+    <NAME>
+        <ELEMENT> <!-- 'column' for database data || 'text' for brut text || 'date' with year/month/day/full_date as value -->
+            <type>column</type>
+            <value>res_id</value>
+            <filter/>
+            <isCustom>false</isCustom> <!-- true or false -->
+        </ELEMENT>
+        <ELEMENT> <!-- 'column' for database data || 'text' for brut text || 'date' with year/month/day/full_date as filter -->
+            <type>column</type>
+            <value>date</value>
+            <filter>year</filter> <!-- year, month, day or full_date-->
+            <isCustom>false</isCustom> <!-- true or false -->
+        </ELEMENT>
+        <ELEMENT> <!-- 'column' for database data || 'text' for brut text || 'date' with year/month/day/full_date as value -->
+            <type>column</type>
+            <value>3</value>
+            <filter/>
+            <isCustom>true</isCustom> <!-- true or false -->
+        </ELEMENT>
+        <ELEMENT> <!-- 'column' for database data || 'text' for brut text || 'date' with year/month/day/full_date as value -->
+            <type>text</type>
+            <value>F</value>
+            <filter/>
+            <isCustom>false</isCustom> <!-- true or false -->
+        </ELEMENT>
+    </NAME>
+    <EXTENSION>
+        <ELEMENT>
+            <type>column</type>
+            <value>format</value>
+            <filter/>
+        </ELEMENT>
+    </EXTENSION>
+    <SEPARATOR> <!-- Separator, used to separate all the elements between them -->
+        <value>_</value>
+    </SEPARATOR>
+    <STATUS>
+        <IN>FACVAL,INIT</IN> <!-- status before the use of the export action  | could be empty or multiple values with ',' but without space -->
+    </STATUS>
+    <ATTACHMENTS>
+        <TYPES>simple_attachment, outgoing_mail_signed</TYPES> <!-- Specify the attachment type to export the file's attachment | separate with ','. If empty all the attachments will be export -->
+        <SUFFIX>_PJ</SUFFIX> <!-- Used to suffix the name of the exported document | Better used a '_' before the extension | this suffix will be suffix by the number of the attachment-->
+    </ATTACHMENTS>
+    <SANITIZER>
+        <ELEMENT>
+            <ORIGINAL>.</ORIGINAL>
+            <REPLACEMENT>-</REPLACEMENT>
+        </ELEMENT>
+    </SANITIZER>
+</ROOT>

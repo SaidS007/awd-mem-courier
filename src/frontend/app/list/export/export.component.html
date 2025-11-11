@@ -1,0 +1,155 @@
+<div class="mat-dialog-content-container">
+  <h1 mat-dialog-title>{{'lang.exportDatas' | translate}}</h1>
+  <div mat-dialog-content>
+    @if (loadingExport) {
+      <div class="loader">
+        <mat-spinner></mat-spinner>
+      </div>
+    }
+    <!-- EDISSYUM - ASY01 Ajout de modèle d'exportation PDF/CSV -->
+    <div class="row export">
+      <div class="col-md-8">
+        <mat-form-field appearance="outline">
+          <mat-label>Mes modèles </mat-label>
+          <mat-select placeholder="{{'lang.exportFormat' | translate}}" [(ngModel)]="selectedModelExport"
+            (selectionChange)="changeModelTemplate($event)" name="exportModel">
+            @for (exportModel of allExportModels; track exportModel; let i = $index) {
+              <mat-option [value]="exportModel">
+                {{exportModel.label}} @if (headerService.user.id !== exportModel.user_id) {
+                <span> ({{'lang.exportTemplateShared' | translate}} {{exportModel['userName']['firstname']}} {{exportModel['userName']['lastname'] }}) </span>
+              }
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+    @if (visibleOption) {
+      <button mat-icon-button type="button" style="color: #3A7C00" [matMenuTriggerFor]="menu">
+        <mat-icon class="secondaryInformations_icon primary" fontSet="fas"
+        fontIcon="fa-ellipsis-v fa-2x"></mat-icon>
+      </button>
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item (click)="deleteModel()" [disabled]="objectKeys(selectedModelExport).length == 0">
+          <mat-icon class="secondaryInformations_icon primary" fontSet="fas"
+          fontIcon="fa-trash fa-2x"></mat-icon>
+          <span>{{'lang.delete' | translate}}</span>
+        </button>
+        <button mat-menu-item [disabled]="objectKeys(selectedModelExport).length == 0" (click)="shareExportTemplate()">
+          <mat-icon class="secondaryInformations_icon primary" fontSet="fas"
+          fontIcon="fa-share fa-2x"></mat-icon>
+          <span>{{'lang.exportPartager' | translate}}</span>
+        </button>
+      </mat-menu>
+    }
+
+    <button mat-icon-button type="button" style="color: #3A7C00" matTooltip="{{'lang.exportEnregistrer' | translate}}" (click)="saveExportTemplate()">
+      <mat-icon class="far fa-plus"></mat-icon>
+    </button>
+
+    @if (visibleOption || visibleOptionEntity) {
+      <button mat-icon-button type="button" style="color: #3A7C00" matTooltip="{{'lang.exportModification' | translate}}" (click)="updateExportTemplate()">
+        <mat-icon class="far fa-edit"></mat-icon>
+      </button>
+    }
+  </div>
+  <mat-divider></mat-divider>
+  <br>
+    <!--END EDISSIUM ASY01 -->
+    <div class="row">
+      <div [class.col-md-12]="exportModel.format !== 'csv'" [class.col-md-3]="exportModel.format === 'csv'">
+        <mat-form-field appearance="outline">
+          <mat-label>{{'lang.format' | translate}}</mat-label>
+          <mat-select placeholder="{{'lang.format' | translate}}" [(ngModel)]="exportModel.format"
+            (selectionChange)="changeTemplate($event)">
+            @for (format of formats; track format) {
+              <mat-option [value]="format">
+                {{format}}
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+      @if (exportModel.format === 'csv') {
+        <div class="col-md-9">
+          <mat-form-field appearance="outline">
+            <mat-label>{{'lang.delimiter' | translate}}</mat-label>
+            <mat-select placeholder="{{'lang.delimiter' | translate}}" [(ngModel)]="exportModel.delimiter"
+              [disabled]="exportModel.format !== 'csv'">
+              @for (delimiter of delimiters; track delimiter) {
+                <mat-option [value]="delimiter">
+                  {{delimiter}}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+      }
+    </div>
+    @if (data.elementsNotAllowed) {
+      <app-maarch-message [content]="'lang.notAllowedResourcesDesc' | translate"></app-maarch-message>
+    }
+    <mat-accordion>
+      <mat-expansion-panel [expanded]="true">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            {{'lang.datasToExport' | translate}}
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="row">
+          <div class="col-md-12">
+            <mat-form-field appearance="outline" class="listFilter">
+              <input matInput placeholder="{{'lang.searchDatas' | translate}}" #listFilter cdkFocusInitial>
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="row exportList">
+          <div class="col-md-6 available-data">
+            <h2><span class="title">{{'lang.availableDatas' | translate}}</span> <i
+            class="fa fa-plus-circle removeAllDatas"
+            style="color: #3A7C00"
+            title="{{'lang.addAllData' | translate}}"
+          (click)="addAllData()"></i></h2>
+          <div id="availableElements" cdkDropList #dataAvailableList="cdkDropList"
+            [cdkDropListData]="dataAvailable" [cdkDropListConnectedTo]="[dataExportList]"
+            class="cdk-list" (cdkDropListDropped)="drop($event)">
+            @for (item of dataAvailable | sortBy: 'label' | filterList:listFilter.value:'label'; track item) {
+              <div class="columns"
+                cdkDrag id="{{item.value}}">{{item.label}} <i class="fa fa-plus"
+              style="cursor:pointer; color: #3A7C00" (click)="addData(item)"></i></div>
+            }
+            @if (dataAvailable.length === 0) {
+              <div class="noData">{{'lang.noDataAvailable' | translate}}</div>
+            }
+          </div>
+        </div>
+        <div style="display: flex;align-items: center;">
+          <i class="fas fa-arrow-right"></i>
+        </div>
+
+        <div class="col-md-6 active-data">
+          <h2><span class="title">{{'lang.chosenDatas' | translate}}</span> <i class="fa fa-minus-circle removeAllDatas" style="color:#8e3e52" title="{{'lang.removeAllDatas' | translate}}" (click)="removeAllData()"></i></h2>
+          <div id="selectedElements" cdkDropList #dataExportList="cdkDropList"
+            [cdkDropListData]="exportModel.data" [cdkDropListConnectedTo]="[dataAvailableList]"
+            class="cdk-list" (cdkDropListDropped)="drop($event)">
+            @for (item of exportModel.data; track item; let i = $index) {
+              <div class="columns" cdkDrag
+                id="{{item.value}}">{{item.label}} <i class="fa fa-minus"
+              style="cursor:pointer; color:#8e3e52" (click)="removeData(i)"></i></div>
+            }
+            @if (exportModel.data.length === 0) {
+              <div class="noData">{{'lang.noDataAvailable' | translate}}</div>
+            }
+          </div>
+        </div>
+      </div>
+    </mat-expansion-panel>
+  </mat-accordion>
+</div>
+<span class="divider-modal"></span>
+<div mat-dialog-actions class="actions">
+  <button mat-raised-button mat-button class="primary" name="export" [disabled]="exportModel.data.length === 0"
+  (click)="exportData();">{{'lang.toExport' | translate}}</button>
+  <button mat-raised-button mat-button [mat-dialog-close]="">{{'lang.cancel' | translate}}</button>
+</div>
+</div>

@@ -1,0 +1,163 @@
+<div class="mat-dialog-content-container">
+  <h1 mat-dialog-title>"{{data.action.label}}"</h1>
+  <div mat-dialog-content [class.fullWidth]="redirectMode === 'entity'">
+    @if (loading) {
+      <div class="loading" style="display:flex;height:100%;">
+        <mat-spinner style="margin:auto;"></mat-spinner>
+      </div>
+    }
+    @if (!loading) {
+      {{'lang.makeActionOn' | translate}}
+      @if (data.resIds.length === 0) {
+        <b class="primary highlight">{{'lang.currentIndexingMail' | translate}}</b>
+      }
+      @if (data.resIds.length === 1) {
+        <b class="primary highlight">{{data.resource.chrono}}</b>
+      }
+      @if (data.resIds.length > 1) {
+        <b class="primary highlight">{{data.resIds.length}}
+        {{'lang.elements' | translate}}</b>
+      }
+      ?<br />
+    }
+    @if (redirectMode === '' && !loading) {
+      <div class="chooseMode">
+        <div>
+          <button mat-stroked-button class="primary" (click)="loadEntities()"><i
+          class="fa fa-sitemap"></i>{{'lang.toAService' | translate}}</button>
+        </div>
+        <div>
+          <button mat-stroked-button class="primary" (click)="loadDestUser()"><i
+          class="fa fa-user"></i>{{'lang.toAnUser' | translate}}</button>
+        </div>
+      </div>
+    }
+    @if (redirectMode === 'none' && !loading) {
+      <div>
+        <div class="alert-message alert-message-danger" role="alert" style="margin-top: 30px;">
+        {{'lang.noSettingsAvailable' | translate}}</div>
+      </div>
+    }
+    @if (redirectMode === 'entity') {
+      <div class="row" style="display: flex;">
+        <div class="redirectContent" style="flex:2">
+          <h2>{{'lang.redirectTo' | translate}} :</h2>
+          <div class="contentEntities">
+            <mat-form-field appearance="outline" floatLabel="never" [style.fontSize.px]="10">
+              <input matInput id="jstree_search" name="jstree_search" type="text"
+                placeholder="{{'lang.searchEntities' | translate}}">
+            </mat-form-field>
+            <div id="jstree"></div>
+          </div>
+        </div>
+        <div class="redirectContent" style="flex:1;overflow: auto;">
+          <h2 title="{{currentEntity.entity_label}}">{{'lang.diffusionList' | translate}} "{{currentEntity.entity_label}}" :
+          </h2>
+          <div class="contentEntities">
+            <app-diffusions-list #appDiffusionsList [adminMode]="true" [resId]="injectDatasParam.resId"
+              [keepDestForRedirection]="injectDatasParam.keepDestForRedirection"
+              [keepCopyForRedirection]="keepCopyForRedirection"
+              [keepOtherRoleForRedirection]="keepOtherRoleForRedirection"
+              [target]="'redirect'">
+            </app-diffusions-list>
+          </div>
+        </div>
+      </div>
+    }
+    @if (redirectMode === 'user' && !loading) {
+      <div class="row">
+        @if (actionKeyword !== 'autoRedirectToUser') {
+          <mat-form-field appearance="outline" floatLabel="never" [style.fontSize.px]="10">
+            <input class="searchUserRedirect" matInput placeholder="{{'lang.searchNewAssignee' | translate}}"
+              [matAutocomplete]="auto" [formControl]="userRedirectCtrl" (click)="userRedirectCtrl.setValue('')">
+            <mat-autocomplete #auto="matAutocomplete" (optionSelected)="changeDest($event)" isOpen="true">
+              @for (user of filteredUserRedirect | async; track user) {
+                <mat-option [value]="user">
+                  <mat-list>
+                    <mat-list-item>
+                      <mat-icon mat-list-icon class="fa fa-user" style="padding-top:0px; color: #3A7C00">
+                      </mat-icon>
+                      <h4 mat-line>{{user.labelToDisplay}}</h4>
+                      <p mat-line style="opacity:0.5;line-height: 15px;font-size: 10px;">
+                      {{user.descriptionToDisplay}} </p>
+                    </mat-list-item>
+                  </mat-list>
+                </mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
+        }
+        <div class="redirectContent" style="flex:2">
+          <h2 style="top:-5px;">{{'lang.newAssignee' | translate}} :</h2>
+          <div class="contentUser">
+            @if (destUser !== null) {
+              <mat-list>
+                <mat-list-item>
+                  <mat-icon mat-list-icon class="fa fa-2x fa-user" style="color: #3A7C00"></mat-icon>
+                  <h4 mat-line>{{destUser.labelToDisplay}}</h4>
+                  <p mat-line style="opacity:0.5;">
+                  {{destUser.descriptionToDisplay}} </p>
+                </mat-list-item>
+              </mat-list>
+            }
+            @if (destUser === null) {
+              <div class="noSelection">
+                {{'lang.noPerson' | translate}}
+              </div>
+            }
+          </div>
+        </div>
+        @if (isDestinationChanging && data.resIds.length === 1) {
+          <div class="alert-message alert-message-info"
+            role="alert" style="margin-top: 30px;">{{'lang.destinationChangingInfo' | translate}}
+            <b>{{destUser.descriptionToDisplay}}</b></div>
+          }
+          @if (isDestinationChanging && data.resIds.length > 1) {
+            <div class="alert-message alert-message-info"
+              role="alert" style="margin-top: 30px;">{{'lang.destinationChangingInfoMass' | translate}}
+              <b>{{destUser.labelToDisplay}}</b> {{'lang.destinationChangingInfoMass2' | translate}}
+              <b>{{destUser.descriptionToDisplay}}</b></div>
+            }
+            @if (keepDestForRedirection && oldUser !== null) {
+              <div class="alert-message alert-message-info" role="alert"
+                style="margin-top: 30px;"><b>{{oldUser.labelToDisplay}}</b>&nbsp;<span
+              [innerHTML]="'lang.willBeAutomaticallyInCopy' | translate"></span></div>
+            }
+          </div>
+        }
+
+        @if (redirectMode !== '' && redirectMode !== 'none') {
+          <div class="row">
+            <app-note-editor #noteEditor [resIds]="data.resIds"></app-note-editor>
+          </div>
+        }
+        @if (showToggle) {
+          <div class="row">
+            <div class="col-md-12" style="margin: 10px 0px 10px 0px;">
+              <mat-slide-toggle name="history" class="primary"
+                [title]="'lang.canGoToNextResDesc' | translate" [(ngModel)]="canGoToNextRes" [checked]="canGoToNextRes">
+                {{'lang.canGoToNextRes' | translate}}
+              </mat-slide-toggle>
+            </div>
+          </div>
+          <mat-divider></mat-divider>
+        }
+      </div>
+      <span class="divider-modal"></span>
+      @if (!loading) {
+        <div mat-dialog-actions class="actions">
+          @if (redirectMode !== '') {
+            <button mat-raised-button mat-button class="primary"
+              [disabled]="checkValidity()"
+              (click)="onSubmit()">
+              {{'lang.validate' | translate}}
+            </button>
+          }
+          <button mat-raised-button mat-button
+            [disabled]="loading"
+            [mat-dialog-close]="">
+            {{'lang.cancel' | translate}}
+          </button>
+        </div>
+      }
+    </div>

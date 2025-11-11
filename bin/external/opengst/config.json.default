@@ -1,0 +1,195 @@
+{
+    "MEM": {
+        "url": "http://localhost/mem/rest/",
+        "username": "",
+        "password": "",
+        "externalId": "opengst",
+        "statusAfterSend": "draft",
+        "senderEmail": "",
+        "modelId": "",
+        "status": "",
+        "closed_status": "",
+        "doctype": "",
+        "typist": "",
+        "destination": "",
+        "priority": "poiuytre1357nbvc"
+    },
+    "OpenGST": {
+        "url": "",
+        "username": "",
+        "password": "",
+        "database": "",
+        "closed_state" : ["finished"],
+        "created_date_from": '2025-01-01 00:00:00'
+    },
+
+    "OpenGSTClauses": {
+        "retrieveSignalement": [
+            {
+                "column": "state",
+                "operator": "in",
+                "value": ["valid", "finished"]
+            },
+            {
+                "column": "partner_id",
+                "operator": "=",
+                "value": "Particuliers Commune"
+            }
+        ]
+    },
+    "MEMEmailModelId": {
+        "sendSignalement": "20"
+    },
+    "databaseClauses": {
+        "sendToOpenGST": {
+            "select": "res_id, subject, creation_date at time zone 'cest' at time zone 'utc' as creation_date, custom_fields, external_id, typist, alt_identifier, docserver_id, format, path, filename, typist",
+            "clause": [
+                {
+                    "where": "status IN (?)",
+                    "data": "NEW"
+                },
+                {
+                    "where": "custom_fields #>> '{110}' <> ''",
+                    "data": ""
+                },
+                {
+                    "where": "custom_fields #>> '{110}' NOT ILIKE '%(nosync)%'",
+                    "data": ""
+                },
+                {
+                    "where": "custom_fields #>> '{100}' <> ''",
+                    "data": ""
+                },
+                {
+                    "where": "external_id ->> 'opengst' IS NULL",
+                    "data": ""
+                }
+            ]
+        },
+        "updateFomOpenGST": {
+            "select": "res_id, subject, custom_fields, external_id",
+            "clause": [
+                {
+                    "where": "status NOT IN (?)",
+                    "data": "'DEL', 'END'"
+                },
+                {
+                    "where": "custom_fields #>>'{107}' IS NOT NULL",
+                    "data": ""
+                },
+                {
+                    "where": "external_id #>> '{opengst, demande_intervention}' <> ''",
+                    "data": ""
+                }
+            ]
+        }
+    },
+    "synchronizeFields": {
+        "file_path": "/var/share/opengst/services.csv"
+    },
+    "customFields": {
+        "type": 110,
+        "canal": 111,
+        "priorite": 103,
+        "quartier": 108,
+        "domaine": 102,
+        "adresse": 100,
+        "infos": 101,
+        "status_demande": 107,
+        "status_intervention": 105,
+        "motif_refus": 106,
+        "objet": 109,
+        "intervention_id": 100,
+        "site": 101,
+        "description": 99
+    },
+    "mapping": {
+        "status": [
+            {
+                "MEM" : "0_DRAFT",
+                "OpenGST" : "draft"
+            },
+            {
+                "MEM": "O_WAIT",
+                "OpenGST": "wait"
+            },
+            {
+                "MEM": "O_REFUSED",
+                "OpenGST": "refused"
+            },
+            {
+                "MEM": "O_VALID",
+                "OpenGST": "valid"
+            },
+            {
+                "MEM": "O_FINISHED",
+                "OpenGST": "finished"
+            },
+            {
+                "MEM": "O_TO_CONF",
+                "OpenGST": "to_confirm"
+            },
+            {
+                "MEM": "O_CONFIRMD",
+                "OpenGST": "confirmed"
+            },
+            {
+                "MEM": "O_MERGED",
+                "OpenGST": "merged"
+            },
+            {
+                "MEM": "O_OPEN",
+                "OpenGST": "open"
+            },
+            {
+                "MEM": "O_SCHEDULD",
+                "OpenGST": "scheduled"
+            },
+            {
+                "MEM": "O_PENDING",
+                "OpenGST": "pending"
+            },
+            {
+                "MEM": "O_CANCELLD",
+                "OpenGST": "cancelled"
+            }
+        ],
+        "channels": [
+            {
+                "MEM": "TELEPHONE",
+                "OpenGST": "5",
+                "sendEmail": true
+            },
+            {
+                "MEM": "EMAIL",
+                "OpenGST": "4",
+                "sendEmail": true
+            },
+            {
+                "MEM": "ELUS",
+                "OpenGST": "6",
+                "sendEmail": true
+            },
+            {
+                "MEM": "GUICHET",
+                "OpenGST": "8",
+                "sendEmail": true
+            },
+            {
+                "MEM": "COURRIER",
+                "OpenGST": "3",
+                "sendEmail": false
+            },
+            {
+                "MEM": "COURRIEL",
+                "OpenGST": "4",
+                "sendEmail": true
+            },
+            {
+                "MEM": "WEB",
+                "OpenGST": "4",
+                "sendEmail": true
+            }
+        ]
+    }
+}

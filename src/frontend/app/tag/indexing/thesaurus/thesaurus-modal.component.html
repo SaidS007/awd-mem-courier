@@ -1,0 +1,40 @@
+<div class="mat-dialog-content-container">
+  <h1 mat-dialog-title>
+    <span style="flex: 1;">{{'lang.tags' | translate}}</span>
+    <button title="{{'lang.close' | translate}}" mat-icon-button [mat-dialog-close]="">
+      <mat-icon class="fa fa-times-circle fa-2x"></mat-icon>
+    </button>
+  </h1>
+  <div mat-dialog-content>
+    <div class="col-md-6" [class.col-md-12]="!functionsService.empty(tag)" style="overflow: auto;">
+      <div id="jstree"></div>
+    </div>
+    @if (!functionsService.empty(tag)) {
+      <div class="col-md-6">
+        <div class="alert-message alert-message-info" role="alert">
+          <b>{{'lang.description' | translate}} :</b><br />
+          {{!functionsService.empty(tag.description) ? tag.description : 'lang.undefined' | translate}}
+          <br /><br />
+          <b>{{'lang.usage' | translate}} :</b><br />
+          {{!functionsService.empty(tag.usage) ? tag.usage : 'lang.undefined' | translate}}
+          @if (tag.links.length > 0) {
+            <br />
+            <hr />
+            @for (link of tag.links; track link) {
+              <span class="badge" [title]="'lang.linkedTags' | translate" style="cursor: pointer;"
+              (click)="selectTag(link)">{{getTagLabel(link)}}</span>
+            }
+          }
+        </div>
+      </div>
+    }
+  </div>
+  <span class="divider-modal"></span>
+  @if (functionsService.empty(data.id)) {
+    <div mat-dialog-actions class="actions">
+      <button mat-raised-button mat-button class="primary" [disabled]="loading || functionsService.empty(tag)"
+      (click)="onSubmit()">{{'lang.validate' | translate}}</button>
+      <button mat-raised-button mat-button [disabled]="loading" [mat-dialog-close]="">{{'lang.cancel' | translate}}</button>
+    </div>
+  }
+</div>

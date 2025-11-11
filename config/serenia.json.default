@@ -1,0 +1,8 @@
+{
+    "enabled": true,
+    "chatbot": {
+        "url": "",
+        "login": "",
+        "password": ""
+    }
+}

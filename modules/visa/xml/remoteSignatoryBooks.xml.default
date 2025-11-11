@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <signatoryBookEnabled>maarchParapheur</signatoryBookEnabled>
+    <signatoryBook>
+        <id>maarchParapheur</id>
+        <userId>ccornillac@maarch.com</userId>
+        <password>maarch</password>
+        <url>https://preview.maarchparapheur.com/</url>
+    </signatoryBook>
+    <signatoryBook>
+        <id>ixbus</id>
+        <tokenAPI></tokenAPI>
+        <url></url>
+        <optionSendOfficeDocument>true</optionSendOfficeDocument> <!-- Si false le document envoyé sera le document d'origine, non converti en PDF -->
+        <autoSelectModelRules> <!-- EDISSYUM - NCH01 IXBUS : Selection automatique du modèle de circuit -->
+            <rules>
+                <type>text</type> <!-- text ou database -->
+                <value></value> <!-- La casse est importante -->
+            </rules>
+            <rules>
+                <type>database</type> <!-- text ou database -->
+                <select>item_id</select> <!-- Une seule valeur seulement -->
+                <table>listinstance, users</table> <!-- Si plusieurs tables, séparez par des virgules -->
+                <left_join>listinstance.item_id = users.id</left_join>
+                <where>item_mode = 'sign' AND difflist_type = 'VISA_CIRCUIT'</where>
+                <res_id_column>res_id</res_id_column> <!-- Nom de la colonne correspondant dans la table où est stocké le res_id du document courant -->
+            </rules>
+        </autoSelectModelRules> <!-- END EDISSYUM - NCH01 -->
+    </signatoryBook>
+    <signatoryBook>
+        <id>iParapheur</id>
+        <userId></userId>
+        <password></password>
+        <url>https://secure-iparapheur-partenaires.libriciel.fr/ws-iparapheur</url>
+        <certPath>serveur_iparapheur.demonstrations.adullact.org.pem</certPath>
+        <certPass></certPass>
+        <certType>pem</certType>
+        <defaultType>Courrier</defaultType>
+        <defaultSousType>signature via service achat</defaultSousType>
+        <errorCode>KO</errorCode>
+        <visaState>Vise</visaState>
+        <signState>Signe</signState>
+        <refusedVisa>RejetVisa</refusedVisa>
+        <refusedSign>RejetSignataire</refusedSign>
+    </signatoryBook>
+    <signatoryBook>
+        <id>fastParapheur</id>
+        <integratedWorkflow>true</integratedWorkflow>
+        <subscriberId></subscriberId>
+        <optionOtp>false</optionOtp>
+        <signatureModes>
+            <mode>
+                <id>visa</id>
+                <label>Visa</label>
+            </mode>
+            <mode>
+                <id>signature</id>
+                <label>Signataire</label>
+            </mode>
+            <!-- <mode>
+                <id>serverSignature</id>
+                <label>Signature Serveur</label>
+            </mode> -->
+        </signatureModes>
+        <workflowTypes>
+            <type>
+                <id>BUREAUTIQUE_PDF</id>
+                <label>Signature PADES</label>
+            </type>
+            <type>
+                <id>BUREAUTIQUE_XML</id>
+                <label>Signature XADES détaché</label>
+            </type>
+            <type>
+                <id>HELIOS_AVEC_TELETRANSMISSION</id>
+                <label>Signature PES avec télétransmission vers la DGFIP</label>
+            </type>
+            <type>
+                <id>HELIOS_SANS_TELETRANSMISSION</id>
+                <label>Signature PES sans télétransmission</label>
+            </type>
+        </workflowTypes>
+        <url>https://demo-parapheur.dfast.fr/parapheur-ws/rest/v1</url>
+        <certPath>fast-user-depot.p12</certPath>
+        <certPass></certPass>
+        <certType>P12</certType>
+        <validatedState>Signé</validatedState>
+        <refusedState>Refusé</refusedState>
+        <validatedVisaState>Visa approuvé</validatedVisaState>
+        <refusedVisaState>Visa désapprouvé</refusedVisaState>
+    </signatoryBook>
+    <!--  EDISSYUM - PYB01 Ajout du connecteur Blueway -->
+    <signatoryBook>
+        <id>blueway</id>
+        <customId>maarch</customId> <!-- custom of the instance -->
+        <ixbusDirectConnection>true</ixbusDirectConnection> <!-- use blueway (false) or directly connect to ixbus (true) -->
+        <url>https://demodemat.ixbus.net/</url> <!-- if blueway is used the url must end with /PortailJSON? -->
+        <customOrganization>7</customOrganization> <!-- id of the custom field in maarch used to select one  organization or another -->
+        <defaultOrganization>1</defaultOrganization> <!-- -->
+        <organization>
+            <id>1</id>
+            <organizationName>LABEL ITEM 1</organizationName> <!-- must coincide with the label of the custom field -->
+            <tokenAPI></tokenAPI>
+            <defaultNature>Documents divers</defaultNature> <!-- default ixbus nature -->
+        </organization>
+        <!-- if needed add more organiations
+        <organization>s
+            <id>2</id>
+            <organizationName>LABEL ITEM 2</organizationName>
+            <tokenAPI></tokenAPI>
+            <defaultNature>Flux comptables</defaultNature>
+        </organization>
+        -->
+    </signatoryBook>
+    <!-- END EDISSYUM - PYB01 -->
+    <!-- EDISSYUM - PYB01 Ajout du connecteur Pastell -->
+    <signatoryBook>
+        <id>pastell</id>
+        <url></url>
+        <userId></userId>
+        <password></password>
+        <entite></entite>
+        <!--<pastellType>ls-document-pdf</pastellType>--> <!-- type de document pastell lors de la création du dossier -->
+        <pastellType>document-a-signer</pastellType>
+        <metadata></metadata>
+        <visaSignature>
+            <externalData>
+                <rules>
+                    <pastell_field>envoi_signature</pastell_field>
+                    <type>text</type> <!-- text ou database -->
+                    <value>yes</value> <!-- La casse est importante -->
+                </rules>
+                <rules>
+                    <pastell_field>iparapheur_type</pastell_field>
+                    <type>text</type> <!-- text ou database -->
+                    <value>EDISSYUM COURRIER</value> <!-- La casse est importante -->
+                </rules>
+                <rules>
+                    <pastell_field>iparapheur_sous_type</pastell_field>
+                    <type>database</type> <!-- text ou database -->
+                    <select>role</select> <!-- Une seule valeur seulement -->
+                    <column>role</column>
+                    <table>listinstance, users, usergroup_content, usergroups</table> <!-- Si plusieurs tables, séparez par des virgules -->
+                    <left_join>listinstance.item_id = users.id, users.id = usergroup_content.user_id, usergroup_content.group_id = usergroups.id</left_join>
+                    <where>item_mode = 'sign' AND difflist_type = 'VISA_CIRCUIT' AND LOWER(usergroups.group_id)='pastell'</where>
+                    <res_id_column>res_id</res_id_column> <!-- Nom de la colonne correspondant dans la table où est stocké le res_id du document courant -->
+                    <value>Signature via service achat--</value> <!-- La casse est importante -->
+                </rules>
+            </externalData>
+            <metadata>
+                <rules>
+                    <pastell_field>competence</pastell_field>
+                    <type>database</type> <!-- text ou database -->
+                    <select>custom_fields#>>'{"11"}' as skill</select> <!-- Une seule valeur seulement -->
+                    <column>skill</column>
+                    <table>res_letterbox</table> <!-- Si plusieurs tables, séparez par des virgules -->
+                    <left_join></left_join>
+                    <where></where>
+                    <res_id_column>res_id</res_id_column>
+                    <value>yes</value> <!-- La casse est importante -->
+                </rules>
+                <rules>
+                    <pastell_field>circuit_visa</pastell_field>
+                    <type>database</type> <!-- text ou database -->
+                    <select>string_agg</select> <!-- Une seule valeur seulement -->
+                    <column>string_agg</column>
+                    <table>pastell_visa</table> <!-- Si plusieurs tables, séparez par des virgules -->
+                    <left_join></left_join>
+                    <where></where>
+                    <res_id_column>res_id</res_id_column>
+                    <value>yes</value> <!-- La casse est importante -->
+                </rules>
+                <rules>
+                    <pastell_field>annotation</pastell_field>
+                    <type>database</type> <!-- text ou database -->
+                    <select>string_agg</select> <!-- Une seule valeur seulement -->
+                    <column>string_agg</column>
+                    <table>pastell_annotations</table> <!-- Si plusieurs tables, séparez par des virgules -->
+                    <left_join></left_join>
+                    <where></where>
+                    <res_id_column>identifier</res_id_column>
+                    <value>yes</value> <!-- La casse est importante -->
+                </rules>
+            </metadata>
+        </visaSignature>
+        <mailSecurise/>
+        <depot/>
+        <systemeArchivage/>
+        <visaState>Vise</visaState>
+        <!--<signState>termine</signState>--> <!-- pour le type ls-document-pdf-->
+        <signState>recu-iparapheur-etat</signState>
+        <refusedVisa>rejet-iparapheur</refusedVisa>
+        <refusedSign>rejet-iparapheur</refusedSign>
+        <preActions> <!-- action pastell modifiable par le client, permet d'envoyer le dossier pastell -> iparapheur -->
+            <!--<action>orientation</action>--> <!-- pour le type ls-document-pdf-->
+            <action>send-iparapheur</action>
+        </preActions>
+        <postActions> <!-- action pastell modifiable par le client, permet de cloturer le dossier après récupération de la réponse signée dans pastell -->
+        </postActions>
+    </signatoryBook>
+    <!-- END EDISSYUM - PYB01 -->
+    <!-- EDISSYUM - YAA01 Ajout du connecteur LexPersona -->
+    <signatoryBook>
+        <id>lexPersona</id>
+        <tokenAPI></tokenAPI>
+        <url></url>
+        <userId></userId> <!-- L’identifiant de l’administrateur fonctionnel -->
+        <consentPage></consentPage> <!-- L'identifiant de la page de consentement pour les signataires -->
+        <approvalConsentPage></approvalConsentPage> <!-- L'identifiant de la page de consentement pour les viseurs -->
+        <signatureProfileId></signatureProfileId> <!-- Le profil de signature à utiliser pour signer le document -->
+        <addCC>Y</addCC> <!-- Ajout du rédacteur MEM en CC du worflow -->
+        <sendApproval>Y</sendApproval> <!-- Contrôle d'envoi des viseurs -->
+        <sendAnnotation>Y</sendAnnotation> <!-- Contrôle d'envoi des annotations -->
+        <groupApproval>Y</groupApproval> <!-- regroupement des viseurs en une seule étape -->
+        <groupSignatory>Y</groupSignatory> <!-- regroupement des signataires en une seule étape -->
+        <externalIdMandatory>Y</externalIdMandatory> <!--  vérification de la présence de la clé "lexPersonaId" dans le champ JSON "external_id" de l'utilisateur -->
+        <getComments>Y</getComments> <!-- l'activation ou la désactivation de la récupération des commentaires publics depuis Lex Persona -->
+        <templateId></templateId> <!-- L'identifiant du modèle de workflow -->
+        <validityPeriod>8553600000</validityPeriod> <!-- La durée de validité en millisecondes (99 jours par défaut) (86400000 minimum, 8553600000 maximum)-->
+        <maxInvites>5</maxInvites> <!-- Le nombre maximum d'invitations à envoyer aux destinataires -->
+        <notifiedEventsCC>
+            <recipientRefused>N</recipientRefused>
+            <recipientFinished>N</recipientFinished>
+            <workflowStarted>N</workflowStarted>
+            <workflowStopped>N</workflowStopped>
+            <workflowFinished>N</workflowFinished>
+            <workflowFinishedDownloadLink>N</workflowFinishedDownloadLink>
+        </notifiedEventsCC>
+        <notifiedEventsOwner>
+            <recipientRefused>N</recipientRefused>
+            <recipientFinished>N</recipientFinished>
+            <workflowStarted>N</workflowStarted>
+            <workflowStopped>N</workflowStopped>
+            <workflowFinished>N</workflowFinished>
+            <workflowFinishedDownloadLink>N</workflowFinishedDownloadLink>
+        </notifiedEventsOwner>
+    </signatoryBook>
+    <!-- END EDISSYUM - YAA01 -->
+    <!-- EDISSYUM - YAA01 Ajout du connecteur sesile -->
+    <signatoryBook>
+        <id>sesile</id>
+        <url></url>
+        <tokenAPI></tokenAPI>
+        <secretAPI></secretAPI>
+        <deposantMail></deposantMail>
+        <organizationId></organizationId>
+        <nameRules>
+            <rule>
+                <type>text</type> <!-- text ou database -->
+                <value>[MEM]</value> <!-- La casse est importante -->
+            </rule>
+        </nameRules>
+        <descriptionRules>
+            <rule>
+                <type>text</type> <!-- text ou database -->
+                <value></value> <!-- La casse est importante -->
+            </rule>
+            <rule>
+                <type>database</type> <!-- text ou database -->
+                <select>CONCAT(lastname, firstname) as typist</select> <!-- Une seule valeur seulement -->
+                <column_name>typist</column_name> <!-- Nom de la colonne correspondant au select, obligatoire si utilisation d'un CONCAT -->
+                <table>res_letterbox, users</table> <!-- Si plusieurs tables, séparez par des virgules -->
+                <left_join>users.id = res_letterbox.typist</left_join> <!-- Si plusieurs jointures, séparez par des virgules -->
+                <where></where>
+                <res_id_column>res_id</res_id_column> <!-- Nom de la colonne correspondant dans la table où est stocké le res_id du document courant -->
+            </rule>
+        </descriptionRules>
+    </signatoryBook>
+    <!-- END EDISSYUM - YAA01 -->
+</root>

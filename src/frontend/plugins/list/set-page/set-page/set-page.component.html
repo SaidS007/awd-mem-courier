@@ -1,0 +1,18 @@
+<mat-form-field class="pageList">
+  <input type="number" matInput
+    class="text-right "
+    min="1" [max]="pageLength"
+    [formControl]="currentPage"
+    [title]="('lang.page' | translate) + ' ' + currentPage.value + '/' + pageLength"
+    (keypress)="functions.isNumber($event)"
+    (change)="goToPage($event.target.value)">
+  @if (!hasError) {
+    <mat-hint align="start">{{'lang.page' | translate}}</mat-hint>
+  }
+  @if (!hasError) {
+    <mat-hint align="end">{{currentPage.value}} / {{pageLength}}</mat-hint>
+  }
+  @if (hasError) {
+    <mat-error align="start">{{'lang.pageNotFound' | translate}}</mat-error>
+  }
+</mat-form-field>

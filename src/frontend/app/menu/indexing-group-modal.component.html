@@ -1,0 +1,15 @@
+<div class="mat-dialog-content-container">
+  <h2 mat-dialog-title class="primary">{{'lang.chooseIndexationProfil' | translate}}</h2>
+  <mat-dialog-content>
+    <mat-nav-list>
+      @for (group of data.indexingGroups; track group) {
+        <button mat-list-item (click)="goTo(group)">
+          <mat-icon mat-list-icon class="fa fa-users" style="color: #3A7C00"></mat-icon>
+          <p mat-line>
+            {{group.label}}
+          </p>
+        </button>
+      }
+    </mat-nav-list>
+  </mat-dialog-content>
+</div>

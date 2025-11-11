@@ -1,0 +1,114 @@
+<div class="mat-dialog-content-container">
+  <h1 mat-dialog-title>{{modalTitle | translate}}</h1>
+  <!-- EDISSYUM - NCH01 Correction de l'apparition de la modale de suspension d'utilisateur -->
+  @if (loading) {
+    <div class="loader">
+      <mat-spinner></mat-spinner>
+    </div>
+  }
+  <!-- END EDISSYUM - NCH01 -->
+  @if (!this.loading) {
+    <mat-dialog-content> <!-- EDISSYUM - NCH01 Correction de l'apparition de la modale de suspension d'utilisateur | Ajout du *ngIf -->
+      @if (isDeletable) {
+        @if (userDestTemplates.length > 0) {
+          <h2>{{'lang.redirectUserListDiff' | translate}}</h2>
+          <div class="alert-message alert-message-info" role="alert">
+            <b>{{data.user.firstname}} {{data.user.lastname}}</b>&nbsp;<span
+          [innerHTML]="'lang.chooseNewDest' | translate"></span> :
+        </div>
+        @for (redirectModel of userDestTemplates; track redirectModel; let i = $index) {
+          <div id="{{redirectModel.object_id}}"
+            class="form-group">
+            <app-plugin-autocomplete [labelPlaceholder]="('lang.newDest' | translate) + ' : ' + redirectModel.title"
+                        [routeDatas]="['/rest/autocomplete/users?inEntity=' + redirectModel.entity_id]"
+                        [targetSearchKey]="'idToDisplay'" [subInfoKey]="'descriptionToDisplay'"
+            (triggerEvent)="setRedirectUserListModels(i, $event)" singleMode required></app-plugin-autocomplete>
+          </div>
+        }
+      }
+      @if (userDestDifflists.length > 0) {
+        <h2>{{'lang.redirectUserListInstances' | translate}}</h2>
+        <div class="alert-message alert-message-info" role="alert">
+          <b>{{data.user.firstname}} {{data.user.lastname}}</b>&nbsp;<span
+        [innerHTML]="'lang.chooseNewDestUser' | translate"></span> :
+      </div>
+      <div id="{{data.user.user_id}}" class="form-group">
+        <app-plugin-autocomplete [labelPlaceholder]="('lang.newDestRes' | translate)"
+          [routeDatas]="['/rest/autocomplete/users']" [targetSearchKey]="'idToDisplay'"
+          [subInfoKey]="'descriptionToDisplay'" (triggerEvent)="setRedirectUserRes($event)" singleMode
+        required></app-plugin-autocomplete>
+      </div>
+    }
+    @if (userVisaWorkflowResources.length > 0) {
+      <h2>{{'lang.redirectUserVisaWorkflow' | translate}}</h2>
+      <div class="alert-message alert-message-info" role="alert">
+        <b>{{data.user.firstname}} {{data.user.lastname}}</b>&nbsp;<span
+      [innerHTML]="'lang.chooseNewVisaUser' | translate"></span> :
+    </div>
+    <div id="{{data.user.user_id}}" class="form-group">
+      <app-plugin-autocomplete [labelPlaceholder]="('lang.newDestRes' | translate)"
+        [routeDatas]="['/rest/autocomplete/users/circuit']" [targetSearchKey]="'idToDisplay'"
+        [subInfoKey]="'descriptionToDisplay'" (triggerEvent)="setRedirectUserVisaWorkflowRes($event)" singleMode
+      required></app-plugin-autocomplete>
+    </div>
+  }
+  @if (userDestTemplates.length === 0 && userDestDifflists.length === 0 && userVisaWorkflowResources.length === 0) {
+    <div class="alert-message alert-message-info" role="alert">
+      {{'lang.' + data.user.actionMode | translate}} {{data.user.firstname}} {{data.user.lastname}}
+    </div>
+  }
+}
+@if (!isDeletable) {
+  <div class="alert-message alert-message-info" role="alert">
+    <p><span [innerHTML]="'lang.userIsNotDeletable' | translate"></span> <b>{{data.user.firstname}}
+  {{data.user.lastname}}</b>&nbsp;</p>
+  <p><span [innerHTML]="'lang.userIsDeletableBy' | translate"></span></p>
+</div>
+@if (userDestTemplates.length > 0) {
+  <div class="modal-body col-md-6">
+    <mat-list>
+      <p mat-line>{{'lang.diffusionList' | translate}}</p>
+      @for (templateEntity of userDestTemplates; track templateEntity) {
+        <mat-list-item>
+          <mat-icon mat-list-icon><i class="fa fa-share-alt" style="color: #3A7C00"></i></mat-icon>
+          <p mat-line><span> {{templateEntity}} </span></p>
+        </mat-list-item>
+      }
+    </mat-list>
+  </div>
+}
+@if (userDestDifflists.length > 0) {
+  <div class="modal-body col-md-6">
+    <mat-list>
+      <p mat-line>{{'lang.mailEntitiesList' | translate}}</p>
+      @for (instanceEntity of userDestDifflists; track instanceEntity) {
+        <mat-list-item>
+          <mat-icon mat-list-icon><i class="fa fa-inbox" style="color: #3A7C00"></i></mat-icon>
+          <p mat-line><span> {{instanceEntity}} </span></p>
+        </mat-list-item>
+      }
+    </mat-list>
+  </div>
+}
+}
+</mat-dialog-content>
+}
+<span class="divider-modal"></span>
+<mat-dialog-actions>
+  @if (data.user.actionMode === 'delete' && isDeletable) {
+    <button mat-raised-button class="warn"
+      type="submit" class="btn btn-danger" (click)="onSubmit()"
+      [disabled]="!isValid()">{{'lang.delete' | translate}}
+    {{'lang.user' | translate}}</button>
+  }
+  @if (data.user.actionMode === 'suspend' && isDeletable) {
+    <button mat-raised-button class="primary"
+      type="submit" (click)="onSubmit()" [disabled]="!isValid()">{{'lang.suspend' | translate}}
+    {{'lang.user' | translate}}</button>
+  }
+  @if (!data.isDeletable) {
+    <button mat-raised-button type="submit"
+    (click)="dialogRef.close()">{{'lang.close' | translate}}</button>
+  }
+</mat-dialog-actions>
+</div>

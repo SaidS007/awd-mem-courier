@@ -1,0 +1,419 @@
+<mat-accordion class="editor-config" style="margin: 10px;">
+  <mat-expansion-panel>
+    <mat-expansion-panel-header>
+      <mat-panel-title class="primary">
+        {{'lang.documentsEditors' | translate}}
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <mat-tab-group>
+      @for (editor of editorsEnabled; track editor; let i = $index) {
+        <mat-tab [label]="editor">
+          <app-maarch-message [content]="'lang.'+editor+'Desc' | translate"></app-maarch-message>
+          <mat-slide-toggle
+            class="toggleConf primary"
+            [title]="'lang.defaultEditor' | translate"
+            [formControl]="editorsConf[editor]['default']"
+            [checked]="editorsConf[editor]['default'].value"
+            (toggleChange)="setDefaultEditor(editor)">
+            {{'lang.defaultEditor' | translate}}
+          </mat-slide-toggle>
+          @for (info of editorsConf[editor] | keyvalue: originalOrder; track info) {
+            @if (info.key !== 'ssl' && info.key !== 'default') {
+              <mat-form-field appearance="outline">
+                <mat-label>{{'lang.' + info.key | translate}}</mat-label>
+                <input matInput [type]="info.key === 'port' ? 'number' : 'text'"
+                  [formControl]="editorsConf[editor][info.key]">
+              </mat-form-field>
+            }
+            @if (info.key === 'ssl') {
+              <mat-slide-toggle
+                class="toggleConf primary"
+                [formControl]="editorsConf[editor][info.key]">{{'lang.' + info.key | translate}}
+              </mat-slide-toggle>
+            }
+          }
+          <div style="display: flex;justify-content: center;">
+            <button mat-button mat-raised-button class="warn"
+              [disabled]="editorsConf[editor]['default'].value === true"
+              (click)="removeEditor(i)">
+              {{'lang.disableEditor' | translate}}
+            </button>
+          </div>
+        </mat-tab>
+      }
+      <mat-tab disabled>
+        <ng-template mat-tab-label>
+          <button mat-button (click)="$event.stopPropagation()" class="primary" [matMenuTriggerFor]="menu"
+            [disabled]="allEditorsEnabled()">
+            <i class="fa fa-plus"></i>
+          {{'lang.configureNewEditor' | translate}}</button>
+          <mat-menu #menu="matMenu">
+            @for (editor of getAvailableEditors(); track editor) {
+              <button mat-menu-item
+              (click)="addEditor(editor)">{{editor}}</button>
+            }
+          </mat-menu>
+        </ng-template>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-expansion-panel>
+  <mat-expansion-panel>
+    <mat-expansion-panel-header>
+      <mat-panel-title class="primary">
+        {{'lang.documentsWatermark' | translate}}
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <mat-slide-toggle style="height:40px;" class="primary" [formControl]="watermark.enabled">
+      {{(watermark.enabled.value ? 'lang.enabled' : 'lang.disabled') | translate}}
+    </mat-slide-toggle>
+    <mat-form-field appearance="outline">
+      <mat-label>{{'lang.content' | translate}}</mat-label>
+      <input matInput type="text" [formControl]="watermark.text">
+      <mat-hint align="end" [innerHTML]="'lang.watermarkContentDesc' | translate"></mat-hint>
+    </mat-form-field>
+    <div class="formType" style="margin-top: 20px;">
+      <div class="formType-title">
+        {{'lang.style' | translate}}
+      </div>
+      <div
+        style="padding-top: 1.25em;width: 100%;display: grid;grid-template-columns: 1fr 1fr auto;grid-gap: 10px;">
+        <app-plugin-select-search [id]="'font'" [label]="'lang.font' | translate" [class]="''"
+          [placeholderLabel]="'lang.chooseValue' | translate" [formControlSelect]="watermark.font"
+          [datas]="fonts" [showLabel]="true" style="width:100%;">
+        </app-plugin-select-search>
+        <mat-form-field>
+          <mat-label>{{'lang.size' | translate}}</mat-label>
+          <input matInput type="number" [formControl]="watermark.size">
+          <span matSuffix class="input-suffix">px</span>
+        </mat-form-field>
+        <button mat-icon-button matSuffix [title]="'lang.color' | translate" (click)="$event.stopPropagation()"
+          [matMenuTriggerFor]="menuColor">
+          <mat-icon class="fa fa-circle"
+            [style.color]="'rgb('+watermark.color.value[0]+', '+watermark.color.value[1]+', '+watermark.color.value[2]+')'">
+          </mat-icon>
+        </button>
+        <mat-menu #menuColor="matMenu">
+          <color-github [color]="{ r: watermark.color[0], g: watermark.color[1], b: watermark.color[2] }"
+            width="100%" [colors]="colors" [triangle]="'hide'" (onChangeComplete)="handleChange($event)">
+        </color-github>
+      </mat-menu>
+    </div>
+  </div>
+  <div class="formType" style="margin-top: 20px;">
+    <div class="formType-title">
+      {{'lang.position' | translate}}
+    </div>
+    <div
+      style="padding-top: 1.25em;width: 100%;display: grid;grid-template-columns: repeat(4, 1fr);grid-gap: 10px;">
+      <mat-form-field>
+        <mat-label>{{'lang.xAxe' | translate}}</mat-label>
+        <input matInput type="number" [formControl]="watermark.posX">
+        <span matSuffix class="input-suffix">px</span>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>{{'lang.yAxe' | translate}}</mat-label>
+        <input matInput type="number" [formControl]="watermark.posY">
+        <span matSuffix class="input-suffix">px</span>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>{{'lang.angle' | translate}}</mat-label>
+        <input matInput type="number" [formControl]="watermark.angle">
+        <span matSuffix class="input-suffix">deg</span>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>{{'lang.opacity' | translate}}</mat-label>
+        <input matInput type="number" step="0.1" min="0" lang="en" [formControl]="watermark.opacity">
+      </mat-form-field>
+    </div>
+  </div>
+</mat-expansion-panel>
+<!-- EDISSYUM - AMO01 - Rajout d'une option pour envoyer les PJ via liens épémères - onglet nextcloud dans paramètres-->
+<mat-expansion-panel>
+  <mat-expansion-panel-header>
+    <mat-panel-title class="primary">
+      {{'lang.attachementsHosts' | translate}}
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+  <mat-tab-group>
+    @for (attachementsHosts of attachmentsHostsEnabled; track attachementsHosts; let i = $index) {
+      <mat-tab [label]="attachementsHosts">
+        @for (info of attachmentsHostsConf[attachementsHosts] | keyvalue: originalOrder; track info) {
+          @if (info.key !== 'byDefault') {
+            <mat-form-field appearance="outline">
+              <mat-label>{{'lang.' + info.key | translate}}</mat-label>
+              <input matInput [type]="info.key === 'password' ? 'password' : 'text'"
+                [formControl]="attachmentsHostsConf[attachementsHosts][info.key]">
+            </mat-form-field>
+          }
+          <!--<mat-slide-toggle style="height:40px;" *ngIf="info.key === 'byDefault'" class="primary"
+          [formControl]="attachmentsHostsConf[attachementsHosts][info.key]">{{'lang.' + info.key | translate}}
+        </mat-slide-toggle>-->
+        @if (info.key === 'byDefault') {
+          <mat-slide-toggle style="height:40px;" class="primary"
+            [formControl]="attachmentsHostsConf[attachementsHosts][info.key]" (change)="changeNextcloudByDefault()">{{'lang.' + info.key | translate}}
+          </mat-slide-toggle>
+        }
+      }
+      <app-maarch-message [mode]="'info'">
+        <div [innerHTML]="'lang.interconnectionNextcloudTest' | translate"></div>
+        <button mat-raised-button [disabled]="loading" (click)="checkNextcloudConnection()"
+          class="primary" [title]="'lang.startTest' | translate">
+          <mat-icon inline="true" color="basic" class="fas fa-plug" style="margin-bottom: 5px; margin-right: 5px;">
+          </mat-icon>
+          {{'lang.startTest' | translate}}
+        </button>
+      </app-maarch-message>
+      @if (!functions.empty(result)) {
+        <app-maarch-message [mode]="hasError ? 'danger' : 'success'" [content]="result"></app-maarch-message>
+      }
+    </mat-tab>
+  }
+</mat-tab-group>
+</mat-expansion-panel>
+<!-- END EDISSYUM - AMO01 -->
+<!-- EDISSYUM - ASY01 Implémentation envoie de Mail sécurisé via Pastell - onglet Pastell dans paramètres-->
+<mat-expansion-panel>
+  <mat-expansion-panel-header>
+    <mat-panel-title class="primary">
+      {{'lang.sendSecureEmail' | translate}}
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+  <mat-tab-group>
+    @for (mailSecure of mailSecureEnabled; track mailSecure; let i = $index) {
+      <mat-tab [label]="mailSecure">
+        @for (info of mailSecureConf[mailSecure] | keyvalue: originalOrder; track info) {
+          @if (info.key === 'enabled') {
+            <mat-slide-toggle style="height:40px; margin-right:10px;" class="primary"
+              [formControl]="mailSecureConf[mailSecure][info.key]" (change)="changePastellByActif()">{{'lang.' + info.key | translate }}
+            </mat-slide-toggle>
+          }
+          @if (info.key !== 'byDefault' && info.key !== 'enabled') {
+            <mat-form-field appearance="outline">
+              <mat-label>{{'lang.' + info.key | translate}}</mat-label>
+              <input matInput [type]="info.key === 'password' ? 'password' : 'text'"
+                [formControl]="mailSecureConf[mailSecure][info.key]" required>
+            </mat-form-field>
+          }
+          @if (info.key === 'byDefault') {
+            <mat-slide-toggle style="height:40px;" class="primary"
+              [formControl]="mailSecureConf[mailSecure][info.key]" [disabled]="!enableDefaultActif" (change)="changePastellByDefault()"> {{'lang.' + info.key | translate}}
+            </mat-slide-toggle>
+          }
+        }
+        <app-maarch-message [mode]="'info'">
+          <div [innerHTML]="'lang.pastellConnectionTest' | translate"></div>
+          <button mat-raised-button [disabled]="msLoadingEmail" (click)="checkPastellConnection()" class="primary"
+            [title]="'lang.startTest' | translate">
+            <mat-icon inline="true" color="basic" class="fas fa-plug"
+              style="margin-bottom: 5px; margin-right: 5px;">
+            </mat-icon>
+            {{'lang.startTest' | translate}}
+          </button>
+        </app-maarch-message>
+        @if (!functions.empty(msResult)) {
+          <app-maarch-message [mode]="msHasErrorEmail ? 'danger' : 'success'"
+          [content]="msResult"></app-maarch-message>
+        }
+      </mat-tab>
+    }
+  </mat-tab-group>
+</mat-expansion-panel>
+<!-- END EDISSYUM - ASY01 -->
+<mat-expansion-panel>
+  <mat-expansion-panel-header>
+    <mat-panel-title class="primary">
+      {{ 'lang.saeConfig' | translate }}
+    </mat-panel-title>
+  </mat-expansion-panel-header>
+  <mat-tab-group>
+    <mat-tab [label]="saeEnabled">
+      <app-maarch-message [mode]="'info'" [content]="'lang.configSaeInfo' | translate : {url : exportSedaUrl}" style="font-size: 14px; height: 50%; margin-bottom: 10px;"></app-maarch-message>
+      <mat-slide-toggle style="margin: 15px;" [checked]="saeEnabled === 'maarchRM'" class="primary" (change)="switchSae()">
+        {{'lang.switchSae' | translate}}
+      </mat-slide-toggle>
+      @if (saeEnabled !== 'maarchRM') {
+        <mat-form-field appearance="outline">
+          <mat-label>{{'lang.sae' | translate}}</mat-label>
+          <input required matInput type="text" [title]="'lang.sae' | translate"
+            [value]="saeConfig['maarchRM']['sae']" [formControl]="saeConfig['maarchRM']['sae']">
+        </mat-form-field>
+      }
+      @for (sae of saeConfig[saeEnabled] | keyvalue: originalOrder; track sae) {
+        @if (saeEnabled === 'maarchRM') {
+          <div>
+            @if (!sae.key.includes('status')) {
+              <div class="form-group">
+                <div class="col-md-6">
+                  <mat-form-field appearance="outline" [class.disabledInput]="sae.key === 'sae'">
+                    <mat-label>{{'lang.' + sae.key | translate}}</mat-label>
+                    <input [required]="['certificateSSL', 'M2M'].indexOf(sae.key) === -1" matInput type="text" [readonly]="sae.key === 'sae'" [title]="'lang.' + sae.key | translate"
+                      [value]="saeConfig[saeEnabled][sae.key]" [formControl]="saeConfig[saeEnabled][sae.key]">
+                  </mat-form-field>
+                </div>
+              </div>
+            }
+            @if (sae.key.includes('status')) {
+              <div class="form-group">
+                <div class="col-md-12">
+                  <mat-form-field appearance="outline">
+                    <mat-label>{{'lang.' + sae.key | translate}}</mat-label>
+                    <mat-select required [formControl]="saeConfig[saeEnabled][sae.key]">
+                      @for (status of statuses; track status) {
+                        <mat-option [value]="status.statusId" [id]="status.id">
+                          {{ status.label }}
+                        </mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+              </div>
+            }
+          </div>
+        }
+        @if (saeEnabled !== 'maarchRM') {
+          <div class="form-group" style="flex:1;">
+            @if (sae.key === 'retentionRules') {
+              <mat-expansion-panel class="externalSAEvalues" [expanded]="true">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    {{'lang.' + sae.key | translate}}
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <div style="display: flex;">
+                  <div style="flex: 1;">
+                    <button mat-raised-button class="primary" (click)="addValue(sae.key)">
+                    {{'lang.addValue' | translate}}</button>
+                  </div>
+                </div>
+                @if (retentionRules.length > 0) {
+                  <div class="col-md-12">
+                    @for (rule of retentionRules; track rule; let i = $index) {
+                      <span>
+                        <div class="form-group">
+                          <div class="col-md-6">
+                            @if (rule.label !== null) {
+                              <mat-form-field floatLabel="never">
+                                <input required matInput [(ngModel)]="rule.id" [placeholder]="'lang.id' | translate">
+                              </mat-form-field>
+                            }
+                          </div>
+                          <div class="col-md-6">
+                            @if (rule.label !== null) {
+                              <mat-form-field floatLabel="never">
+                                <input required matInput [(ngModel)]="rule.label" [placeholder]="'lang.label' | translate">
+                                <button class="warn" mat-icon-button matSuffix (click)="removeField(i, sae.key)"
+                                  [title]="'lang.delete' | translate" [disabled]="retentionRules.length === 1">
+                                  <mat-icon class="fa fa-trash"></mat-icon>
+                                </button>
+                              </mat-form-field>
+                            }
+                          </div>
+                        </div>
+                      </span>
+                    }
+                  </div>
+                }
+              </mat-expansion-panel>
+            }
+            @if (sae.key === 'archiveEntities') {
+              <mat-expansion-panel class="externalSAEvalues" [expanded]="false">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    {{'lang.' + sae.key | translate}}
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <div style="display: flex;">
+                  <div style="flex: 1;">
+                    <button mat-raised-button class="primary" (click)="addValue(sae.key)">
+                    {{'lang.addValue' | translate}}</button>
+                  </div>
+                </div>
+                @if (archiveEntities.length > 0) {
+                  <div class="col-md-12">
+                    @for (rule of archiveEntities; track rule; let i = $index) {
+                      <span>
+                        <div class="form-group">
+                          <div class="col-md-6">
+                            @if (rule.label !== null) {
+                              <mat-form-field floatLabel="never">
+                                <input required matInput [(ngModel)]="rule.id" [placeholder]="'lang.id' | translate">
+                              </mat-form-field>
+                            }
+                          </div>
+                          <div class="col-md-6">
+                            @if (rule.label !== null) {
+                              <mat-form-field floatLabel="never">
+                                <input required matInput [(ngModel)]="rule.label" [placeholder]="'lang.label' | translate">
+                                <button class="warn" mat-icon-button matSuffix (click)="removeField(i, sae.key)"
+                                  [title]="'lang.delete' | translate" [disabled]="archiveEntities.length === 1">
+                                  <mat-icon class="fa fa-trash"></mat-icon>
+                                </button>
+                              </mat-form-field>
+                            }
+                          </div>
+                        </div>
+                      </span>
+                    }
+                  </div>
+                }
+              </mat-expansion-panel>
+            }
+            @if (sae.key === 'archivalAgreements') {
+              <mat-expansion-panel class="externalSAEvalues" [expanded]="false">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    {{'lang.' + sae.key | translate}}
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <div style="display: flex;">
+                  <div style="flex: 1;">
+                    <button mat-raised-button class="primary" (click)="addValue(sae.key)">
+                    {{'lang.addValue' | translate}}</button>
+                  </div>
+                </div>
+                @if (archivalAgreements.length > 0) {
+                  <div class="col-md-12">
+                    @for (rule of archivalAgreements; track rule; let i = $index) {
+                      <span>
+                        <div class="form-group">
+                          <div class="col-md-6">
+                            @if (rule.label !== null) {
+                              <mat-form-field floatLabel="never">
+                                <input required matInput [(ngModel)]="rule.id" [placeholder]="'lang.id' | translate">
+                              </mat-form-field>
+                            }
+                          </div>
+                          <div class="col-md-6">
+                            @if (rule.label !== null) {
+                              <mat-form-field floatLabel="never">
+                                <input required matInput [(ngModel)]="rule.label" [placeholder]="'lang.label' | translate">
+                                <button class="warn" mat-icon-button matSuffix (click)="removeField(i, sae.key)"
+                                  [title]="'lang.delete' | translate" [disabled]="archivalAgreements.length === 1">
+                                  <mat-icon class="fa fa-trash"></mat-icon>
+                                </button>
+                              </mat-form-field>
+                            }
+                          </div>
+                        </div>
+                      </span>
+                    }
+                  </div>
+                }
+              </mat-expansion-panel>
+            }
+          </div>
+        }
+      }
+      <div class="form-group">
+        <div class="col-sm-12" style="text-align:center;">
+          @if (saeEnabled) {
+            <button mat-raised-button class="primary" [disabled]="loading || !allValid()" (click)="saveSaeConfig()">
+              {{( saeEnabled === 'maarchRM' ? 'lang.validateConfig' : 'lang.validate') | translate}}
+            </button>
+          }
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</mat-expansion-panel>
+</mat-accordion>

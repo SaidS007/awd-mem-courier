@@ -1,0 +1,4 @@
+#!/bin/sh
+cd /var/www/mem_courrier/bin/exportSeda/ # EDISSYUM - PYB01 Adaptation des chemins aux conventions Edissyum
+filePath='/var/www/mem_courrier/bin/exportSeda/purge.php' # EDISSYUM - PYB01 Adaptation des chemins aux conventions Edissyum
+php $filePath -c /var/www/mem_courrier/config/config.json # EDISSYUM - PYB01 Adaptation des chemins aux conventions Edissyum

@@ -1,0 +1,294 @@
+.serenia_container {
+    z-index: 99;
+    right: 0;
+    bottom: 0;
+    position: absolute;
+    pointer-events: none;
+
+    & .serenia_notif {
+        pointer-events: none;
+        opacity: 0;
+        right: 10px;
+        float: right;
+        padding: 10px;
+        background: white;
+        position: relative;
+        transform: translateY(-50px);
+        border-radius: 5px 5px 0 5px;
+        box-shadow: rgba(0, 0, 0, 0.35) 0 5px 15px;
+        transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+    }
+
+    & .serenia_dialog {
+        pointer-events: none;
+        opacity: 0;
+        right: 10px;
+        width: 50rem;
+        max-width: 95vw;
+        margin-left: 5rem;
+        overflow: hidden;
+        max-height: 670px;
+        position: relative;
+        border-radius: 5px;
+        transform: translateY(0px);
+        box-shadow: rgba(0, 0, 0, 0.35) 0 5px 15px;
+        transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+
+        & .serenia_dialog_header {
+            color: white;
+            display: flex;
+            padding: 10px;
+            border-radius: 5px 5px 0 0;
+            justify-content: space-between;
+            background-color: var(--maarch-color-primary);
+
+            & h4 {
+                margin-top: 0;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+
+            & h5 {
+                opacity: 0.8;
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+
+            & .serenia_dialog_header_close {
+                cursor: pointer;
+
+                & i {
+                    font-size: 2rem;
+                }
+            }
+        }
+
+        & .serenia_input {
+            width: 100%;
+            display: flex;
+            padding: 10px;
+            background-color: white;
+
+            & input {
+                margin-right: 5px;
+                width: 100%;
+            }
+
+            & .serenia_input_send {
+                cursor: pointer;
+                color: var(--maarch-color-primary);
+            }
+        }
+
+        & .serenia_dialog_body {
+            display: flex;
+            overflow: auto;
+            max-height: 550px;
+            min-height: 350px;
+            overflow-y: scroll;
+            flex-direction: column;
+            background-color: white;
+            padding: 10px 10px 8px 10px;
+
+            & .serenia_dialog_message_container {
+                opacity: 0;
+                display: flex;
+                margin-bottom: 5px;
+                align-items: flex-end;
+                transform: translateY(20px);
+                transition: opacity 0.2s ease-in-out, all 0.2s ease-in-out;
+
+                & .serenia_dialog_message {
+                    padding: 10px;
+                    margin-left: 5px;
+                    margin-bottom: 15px;
+                    background-color: #f1f1f1;
+                    border-radius: 5px 5px 5px 0;
+                }
+
+                & img {
+                    width: 30px;
+                    height: 30px;
+                }
+
+                & .dot {
+                    animation: mercuryTypingAnimation 1.8s infinite ease-in-out;
+                    background-color: var(--maarch-color-primary);
+                    border-radius: 50%;
+                    height: 7px;
+                    margin-right: 4px;
+                    vertical-align: middle;
+                    width: 7px;
+                    display: inline-block;
+                }
+                & .dot:nth-child(1) {
+                    animation-delay: 200ms;
+                }
+                & .dot:nth-child(2) {
+                    animation-delay: 300ms;
+                }
+                & .dot:nth-child(3) {
+                    animation-delay: 400ms;
+                }
+                & .dot:last-child {
+                    margin-right: 0;
+                }
+            }
+
+            & .user_dialog_message_container {
+                float: right;
+                display: flex;
+                margin-bottom: 30px;
+                align-items: flex-end;
+                transform: translateY(20px);
+                transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+
+                & .serenia_dialog_message {
+                    color: white;
+                    padding: 10px;
+                    margin-left: 5px;
+                    margin-bottom: 15px;
+                    border-radius: 5px 5px 0 5px;
+                    background-color: var(--maarch-color-primary);
+                }
+            }
+
+            & .serenia_typing {
+                & .serenia_dialog_message_container {
+                    height: 0;
+                }
+                height: 0;
+                opacity: 0;
+                transform: translateY(20px);
+                transition: height 0.2s ease-in-out, opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+            }
+
+            & .show_typing {
+                & .serenia_dialog_message_container {
+                    height: 100%!important;
+                }
+                height: 100%!important;
+                opacity: 1!important;
+                transform: translateY(0)!important;
+            }
+        }
+
+        & .serenia_dialog_actions {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+        }
+    }
+
+    & .serenia_enabled {
+        background-image: url('../../assets/serenia-chatbot.png') !important;
+        width: 80px !important;
+        height: 80px !important;
+    }
+
+    & .serenia {
+        opacity: 1;
+        right: 10px;
+        width: 50px;
+        height: 50px;
+        bottom: 10px;
+        cursor: pointer;
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: all;
+        background-size: 100%;
+        border: 1px solid #f1f1f1;
+        transition: all 0.2s ease;
+        box-shadow: rgba(0, 0, 0, 0.35) 0 5px 15px;
+        background-image: url('../../assets/serenia-headset.png');
+
+        &:hover {
+            width: 80px;
+            height: 80px;
+            opacity: 0.8;
+            background-image: url('../../assets/serenia-chatbot.png');
+            &:before {
+                background-image: none!important;
+            }
+        }
+
+        & .serenia_chip {
+            & i {
+                display: none;
+            }
+        }
+    }
+}
+
+.serenia_container.show_notif, .serenia_container.keepSereniaIcon {
+    & .serenia .serenia_chip {
+        & i {
+            right: 5px;
+            color: #00CB55;
+            position: absolute;
+            border-radius: 50%;
+            font-size: 15px !important;
+            border: 1px solid #f1f1f1;
+            display: flex;
+        }
+    }
+
+    & .serenia img {
+        width: 80px;
+        height: 80px;
+        cursor: pointer;
+    }
+
+    & .serenia:before {
+        content: '';
+        width: 100%;
+        z-index: -1;
+        height: 100%;
+        filter: blur(20px);
+        position: absolute;
+        animation: animate 8s linear infinite;
+        background: linear-gradient(90deg, #03f44f, #f3bd53, #04ec73, #2ff403) 0 0 / 400% 400%;
+    }
+}
+
+.show_notif .serenia_notif {
+    opacity: 1;
+    transform: translateY(-100px);
+}
+
+.show_dialog .serenia_dialog {
+    opacity: 1;
+    transform: translateY(-60px);
+    pointer-events: all;
+}
+
+.serenia_dialog_message_active {
+    opacity: 1 !important;
+    transform: translateY(0px) !important;
+}
+
+.serenia_dialog_action_active {
+    opacity: 1 !important;
+    transform: translateY(0px) !important;
+}
+
+@keyframes animate {
+    0% {
+        background-position: 0;
+    }
+    100% {
+        background-position: 400%;
+    }
+}
+
+@keyframes mercuryTypingAnimation {
+    0% {
+        transform: translateY(0px);
+    }
+    28% {
+        transform: translateY(-7px);
+    }
+    44% {
+        transform: translateY(0px);
+    }
+}

@@ -1,0 +1,47 @@
+<div class="tile-title" [title]="!onError ? ('lang.' + tile.type | translate) : errorMessage" [style.background-color]="tile.color" style="color: white;">
+  {{!onError ? getTileLabel(tile) : ('lang.error' | translate) + ' ' + ('lang.' + tile.type | translate)}}
+  @if (!loading && onError) {
+    <mat-icon fontSet="fas" fontIcon="fa-info-circle fa-2x" [class.onError]="onError"></mat-icon>
+  }
+</div>
+@if (loading) {
+  <mat-progress-bar mode="indeterminate" class="loader primary">
+  </mat-progress-bar>
+  <i class="{{tile.icon}} tile-icon primary"></i>
+}
+@if (!loading && !onError) {
+  @if (view==='list') {
+    <app-tile-view-list
+      [displayColumns]="['contactLabel','subject','creationDate']"
+      [tile]="tile"
+      [resources]="resources"
+      [icon]="tile.icon"
+      [route]="route"
+      [viewDocRoute]="viewDocRoute"
+      style="display: flex;flex: 1;overflow: auto;">
+    </app-tile-view-list>
+  }
+  @if (view==='summary') {
+    <app-tile-view-summary
+      [route]="route"
+      [countResources]="countResources"
+      [icon]="tile.icon"
+      [tile]="tile"
+      [resourceLabel]="tile.type==='shortcut' ? tile.label : ('lang.mails' | translate)"
+      style="display: flex;flex: 1;overflow: auto;">
+    </app-tile-view-summary>
+  }
+  @if (view==='chart') {
+    <app-tile-view-chart
+      [route]="route"
+      [resources]="resources"
+      [tile]="tile"
+      [icon]="tile.icon"
+      [resourceLabel]="('lang.mails' | translate)"
+      style="display: flex;flex: 1;overflow: auto;">
+    </app-tile-view-chart>
+  }
+}
+@if (!loading && onError) {
+  <i class="far fa-frown tile-icon-error" style="color:#8e3e52" [title]="errorMessage"></i>
+}

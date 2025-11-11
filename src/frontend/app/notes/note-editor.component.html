@@ -1,0 +1,83 @@
+<mat-form-field appearance="outline" class="noteEditorContent">
+  <textarea matInput id="inputNote" [placeholder]="title" [(ngModel)]="content"></textarea>
+  <hr style="margin-bottom: 10px;">
+  <span class="warningNote">{{'lang.warningNote' | translate}}</span>
+  <button matSuffix style="color: #3A7C00" mat-icon-button title="{{'lang.options' | translate}}" [matMenuTriggerFor]="menuMain">
+    <mat-icon fontSet="fas" fontIcon="fa-angle-right fa-2x"></mat-icon>
+  </button>
+  <mat-menu #menuMain="matMenu" [class]="'templateNoteListMenu'">
+    <button mat-menu-item [matMenuTriggerFor]="menuTemplates" (menuOpened)="getTemplatesNote()">
+      <span>{{'lang.noteTemplates' | translate}}</span>
+    </button>
+    @if (!disableRestriction) {
+      <button mat-menu-item [matMenuTriggerFor]="menuEntities">
+        <span>{{'lang.visibleBy' | translate}}</span>
+      </button>
+    }
+  </mat-menu>
+
+  <mat-menu #menuTemplates="matMenu" [class]="'templateNoteListMenu'">
+    <div
+      style="z-index:1;position: sticky;top: 0px;text-align: center;font-size: 10px;color: white;background: #3A7C00;padding: 5px;font-weight: bold;">
+      {{'lang.noteTemplates' | translate}}
+    </div>
+    @for (template of templatesNote; track template) {
+      <button mat-menu-item matTooltip="{{template.template_content}}"
+        matTooltipPosition="left" (click)="selectTemplate(template)">
+        <span>{{template.template_label}}</span>
+      </button>
+    }
+    @if (templatesNote.length == 0) {
+      <button mat-menu-item disabled>
+        <span>{{'lang.noTemplate' | translate}}</span>
+      </button>
+    }
+  </mat-menu>
+  <mat-menu #menuEntities="matMenu" [class]="'templateNoteListMenu fixedWidth'">
+    <div
+      style="z-index:1;position: sticky;top: 0px;text-align: center;font-size: 10px;color: white;background: #3A7C00;padding: 5px;font-weight: bold;">
+      {{'lang.entities' | translate}}
+    </div>
+    <ng-template matMenuContent>
+      <mat-form-field floatLabel="never" appearance="outline" class="smallInput" (click)="$event.stopPropagation();" style="margin-bottom: -15px;">
+        <input matInput id="searchTerm" placeholder="{{'lang.searchEntities' | translate}}" [formControl]="searchTerm"
+          autocomplete="off" (click)="$event.stopPropagation();" (keydown)="$event.stopPropagation()">
+      </mat-form-field>
+      <ng-container>
+        @for (entity of entitiesList; track entity) {
+          <button mat-menu-item class="labelFolder" [disabled]="entity.selected"
+            (click)="$event.stopPropagation();selectEntity(entity)" [title]="entity.entity_label">
+            {{entity.entity_label}}
+          </button>
+        }
+      </ng-container>
+    </ng-template>
+  </mat-menu>
+
+  @if (addMode) {
+    <button matSuffix mat-icon-button style="color: #3A7C00" title="{{'lang.add' | translate}}" (click)="addNote()"
+      [disabled]="content.trim() == '' || loading">
+      <mat-icon fontSet="far" fontIcon="fa-paper-plane fa-2x"></mat-icon>
+    </button>
+  }
+  @if (upMode) {
+    <button matSuffix mat-icon-button style="color: #3A7C00" title="{{'lang.validate' | translate}}" (click)="updateNote()"
+      [disabled]="content.trim() == '' || loading">
+      <mat-icon fontSet="far" fontIcon="fa-paper-plane fa-2x"></mat-icon>
+    </button>
+  }
+</mat-form-field>
+<div style="overflow: auto;max-height: 75px;">
+  <div style="font-size: 11px;position: sticky;top: 0px;" [style.background]="(upMode && entitiesRestriction.length > 0) ? '#FFEDCC' : 'white'">{{'lang.noteVisibleBy' | translate}}</div>
+  @if (entitiesRestriction.length === 0) {
+    <span class="label label-default noNoteRestriction">{{'lang.all' | translate}}</span>
+  }
+  @for (entity of entities | sortBy: 'entity_label'; track entity; let i = $index) {
+    @if (entitiesRestriction.indexOf(entity.id) > -1) {
+      <span class="label label-default noteRestriction"
+        (click)="removeEntityRestriction(entitiesRestriction.indexOf(entity.id), i)"
+        title="{{'lang.restrictedEntity' | translate}}"><i class="fa fa-sitemap"></i>
+        {{entity.entity_label}}&nbsp;<i class="fa fa-times" style="cursor: pointer;"></i></span>
+      }
+    }
+  </div>

@@ -1,0 +1,111 @@
+<root>
+    <issuer_enabled></issuer_enabled>
+    <trace_log>false</trace_log> <!-- Activer les logs de trace (DEBUG uniquement) -->
+    <create_user>true</create_user> <!-- Créer l'utilisateur si le username ne corresponds à aucun utilisateur MEM -->
+    <full_disconnect>false</full_disconnect> <!-- Si true, déconnecte l'utilisateur de MEM et de l'issuer. Si false, seulement de MEM -->
+    <redirect_uri>http://localhost/mem/dist/index.html</redirect_uri> <!-- URL de redirection. À paramétrer côté issuer également. Bien penser à laisser le dist/index.html -->
+    <issuer>
+        <id>google</id>
+        <url>https://accounts.google.com/</url>
+        <authorization_endpoint>https://accounts.google.com/o/oauth2/v2/auth</authorization_endpoint>
+        <logout_endpoint>https://accounts.google.com/Logout</logout_endpoint>
+        <client_id></client_id>
+        <client_secret></client_secret>
+        <allow_http>false</allow_http> <!-- Autoriser les requêtes non sécurisées HTTP -->
+        <offline_access>true</offline_access> <!-- Demande de rafraichissement du token (spécifique à Google) -->
+        <prompt_consent>true</prompt_consent> <!-- Demande de rafraichissement du token (spécifique à Google) -->
+        <scopes>
+            <scope>openid</scope>
+            <scope>email</scope>
+            <scope>profile</scope>
+        </scopes>
+        <user_infos>
+            <email>email</email>
+            <username>sub</username>
+            <lastname>family_name</lastname>
+            <firstname>given_name</firstname>
+        </user_infos>
+    </issuer>
+    <issuer>
+        <id>azure</id>
+        <url>https://login.microsoftonline.com/YOUR_TENANT_ID/v2.0/</url>
+        <authorization_endpoint>https://login.microsoftonline.com/YOUR_TENANT_ID/oauth2/v2.0/authorize</authorization_endpoint>
+        <logout_endpoint>https://login.microsoftonline.com/YOUR_TENANT_ID/oauth2/v2.0/logout</logout_endpoint>
+        <client_id></client_id>
+        <client_secret></client_secret>
+        <allow_http>false</allow_http> <!-- Autoriser les requêtes non sécurisées HTTP -->
+        <offline_access>false</offline_access> <!-- Demande de rafraichissement du token (spécifique à Google) -->
+        <prompt_consent>false</prompt_consent> <!-- Demande de rafraichissement du token (spécifique à Google) -->
+        <scopes>
+            <scope>openid</scope>
+            <scope>offline_access</scope>
+        </scopes>
+        <user_infos>
+            <email>email</email>
+            <username>sub</username>
+            <lastname>family_name</lastname>
+            <firstname>given_name</firstname>
+        </user_infos>
+    </issuer>
+    <issuer>
+        <id>citrix</id>
+        <url>https://YOUR_DOMAIN_NAME/</url>
+        <authorization_endpoint>https://YOUR_DOMAIN_NAME/oauth/idp/login</authorization_endpoint>
+        <logout_endpoint>https://YOUR_DOMAIN_NAME/oauth/idp/logout</logout_endpoint>
+        <client_id></client_id>
+        <client_secret></client_secret>
+        <allow_http>false</allow_http>
+        <scopes>
+            <scope>openid</scope>
+        </scopes>
+        <user_infos>
+            <email>email</email>
+            <username>nickname</username>
+            <lastname>family_name</lastname>
+            <firstname>given_name</firstname>
+        </user_infos>
+    </issuer>
+    <issuer>
+        <id>lemonldap</id>
+        <url>https://YOUR_DOMAIN_NAME</url>
+        <authorization_endpoint>https://YOUR_DOMAIN_NAME/oauth2/authorize</authorization_endpoint>
+        <logout_endpoint>https://YOUR_DOMAIN_NAME/oauth2/logout</logout_endpoint>
+        <client_id></client_id>
+        <client_secret></client_secret>
+        <allow_http>false</allow_http> <!-- Autoriser les requêtes non sécurisées HTTP -->
+        <offline_access>false</offline_access> <!-- Demande de rafraichissement du token (spécifique à Google) -->
+        <prompt_consent>false</prompt_consent> <!-- Demande de rafraichissement du token (spécifique à Google) -->
+        <scopes>
+            <scope>openid</scope>
+            <scope>email</scope>
+            <scope>profile</scope>
+            <scope>offline_access</scope>
+        </scopes>
+        <user_infos>
+            <email>email</email>
+            <username>sub</username>
+            <lastname>family_name</lastname>
+            <firstname>given_name</firstname>
+        </user_infos>
+    </issuer>
+    <issuer>
+        <id>keycloak</id>
+        <url>http://localhost/realms/REALM_NAME</url>
+        <authorization_endpoint>http://localhost/realms/REALM_NAME/protocol/openid-connect/auth</authorization_endpoint>
+        <logout_endpoint>http://localhost/realms/REALM_NAME/protocol/openid-connect/logout</logout_endpoint>
+        <client_id></client_id>
+        <client_secret></client_secret>
+        <allow_http>false</allow_http> <!-- Autoriser les requêtes non sécurisées HTTP -->
+        <offline_access>false</offline_access> <!-- Demande de rafraichissement du token (spécifique à Google) -->
+        <prompt_consent>false</prompt_consent> <!-- Demande de rafraichissement du token (spécifique à Google) -->
+        <scopes>
+            <scope>openid</scope>
+        </scopes>
+        <user_infos>
+            <email>email</email>
+            <username>preferred_username</username>
+            <lastname>family_name</lastname>
+            <firstname>given_name</firstname>
+        </user_infos>
+    </issuer>
+</root>

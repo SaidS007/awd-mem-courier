@@ -1,0 +1,54 @@
+<form>
+  <input type="hidden" [formControl]="control">
+  @if (!control.disabled) {
+    <mat-form-field floatLabel="never" class="input-form">
+      <mat-icon class="fa fa-search" matPrefix style="padding-left: 20px;font-size: 15px; color: #3A7C00"></mat-icon>
+      <input type="text" #autoCompleteInput [placeholder]="'lang.searchFolder' | translate" matInput [formControl]="myControl"
+        [matAutocomplete]="auto" (click)="$event.stopPropagation()" (focus)="resetAutocomplete()">
+      <button [disabled]="!canAdd" type="button" matSuffix mat-icon-button (click)="addItem()">
+        <mat-icon class="fa fa-folder-plus" [title]="'lang.add' | translate" [style.visibility]="canAdd && myControl.value !== null && myControl.value.length > 0 ? 'visible' : 'hidden'"></mat-icon>
+      </button>
+      <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectOpt($event)">
+        @if (options.length > 0 && !loading) {
+          @for (option of filteredOptions | async | sortBy: key; track option) {
+            <mat-option [value]="option" [title]="option[key]">
+              <span class="primary">{{option[key]}}</span>
+            </mat-option>
+          }
+        }
+        @if (options.length === 0 && !loading) {
+          <mat-option class="autoCompleteInfoResult smallInputInfo" disabled
+            [innerHTML]="listInfo">
+          </mat-option>
+        }
+        @if (loading) {
+          <mat-option disabled>
+            <mat-spinner diameter="20"></mat-spinner>
+          </mat-option>
+        }
+      </mat-autocomplete>
+    </mat-form-field>
+  }
+  <div class="itemList">
+    @if (control.value.length > 0) {
+      <mat-chip-list class="mat-chip-list-stacked itemChip" >
+        @for (item of control.value; track item; let i = $index) {
+          <mat-chip
+            [removable]="!control.disabled" (removed)="removeItem(i)" class="listAutocomplete">
+            <span style="display: flex;flex: 1;align-items: center;" [title]="getFolderLabel(item)">
+              <i class="fa fa-folder-open" style="padding-right:5px;"></i>&nbsp;{{getFolderLabel(item)}}
+            </span>
+            @if (!control.disabled) {
+              <mat-icon matChipRemove class="fa fa-times"></mat-icon>
+            }
+          </mat-chip>
+        }
+      </mat-chip-list>
+    }
+    @if (control.value.length === 0) {
+      <div class="noResult">
+        {{'lang.noSelectedFolder' | translate}}
+      </div>
+    }
+  </div>
+</form>

@@ -1,0 +1,284 @@
+<div class="attach-container">
+  @if (sendingData) {
+    <div class="example-loading-shade">
+      <mat-spinner></mat-spinner>
+    </div>
+  }
+  <h1 mat-dialog-title>
+    @if (!loading) {
+      <span style="flex: 1;" [title]="attachment.title.value">
+        @if (attachment.chrono.value !== null) {
+          {{attachment.chrono.value}} -
+        }
+        {{attachment.title.value | shorten: 50: '...'}}
+      </span>
+    }
+    <button [title]="this.translate.instant('lang.close')" mat-icon-button (click)="dialogRef.close();">
+      <mat-icon class="fa fa-times"></mat-icon>
+    </button></h1>
+    <mat-dialog-content class="attach-content">
+      @if (!loading) {
+        <div class="attachment-form col-md-3 col-sm-12">
+          @if (editMode && isVersionEnabled()) {
+            <div class="attachment-form-item">
+              <mat-slide-toggle [checked]="newVersion" class="primary"
+              (change)="newVersion = !newVersion;">{{'lang.newVersion' | translate}}</mat-slide-toggle>
+            </div>
+          }
+          @if (editMode &&  newVersion) {
+            <div class="attachment-form-item">
+              <div class="alert-message alert-message-danger" role="alert"
+              [innerHTML]="this.translate.instant('lang.mustEditDocument')"></div>
+            </div>
+          }
+          <div class="attachment-form-item">
+            <mat-form-field class="input-form">
+              <input disabled matInput placeholder="{{'lang.status' | translate}}" [value]="'lang.attachment_' + attachment['status'].value | translate">
+            </mat-form-field>
+            <div class="fieldState">
+              <i class="fas fa-asterisk noMandatory"></i>
+            </div>
+          </div>
+          <div class="attachment-form-item">
+            <app-plugin-select-search [label]="this.translate.instant('lang.type')" [placeholderLabel]="this.translate.instant('lang.type')"
+              [formControlSelect]="attachment['type']" [datas]="attachmentsTypes"
+              (afterSelected)="getAttachType($event)" style="width:100%;">
+            </app-plugin-select-search>
+            <div class="fieldState">
+              @if (attachment['type'].hasError('required') && attachment['type'].untouched) {
+                <i class="fas fa-asterisk fieldRequired"
+                ></i>
+              }
+              @if (attachment['type'].touched && attachment['type'].hasError('required')) {
+                <i class="fas fa-exclamation-triangle fieldError"
+                ></i>
+              }
+              @if (attachment['type'].valid && !isEmptyField(attachment['type'])) {
+                <i class="fas fa-check fieldFull"
+                ></i>
+              }
+            </div>
+          </div>
+          <div class="attachment-form-item">
+            <mat-form-field class="input-form">
+              <input matInput placeholder="{{'lang.subject' | translate}}" maxlength="255" [formControl]="attachment['title']">
+            </mat-form-field>
+            <div class="fieldState">
+              @if (attachment['title'].hasError('required') && attachment['title'].untouched) {
+                <i class="fas fa-asterisk fieldRequired"
+                ></i>
+              }
+              @if (attachment['title'].touched && attachment['title'].hasError('required')) {
+                <i class="fas fa-exclamation-triangle fieldError"
+                ></i>
+              }
+              @if (attachment['title'].valid && !isEmptyField(attachment['title'])) {
+                <i class="fas fa-check fieldFull"
+                ></i>
+              }
+            </div>
+          </div>
+          @if (sendMassMode) {
+            <div class="attachment-form-item" style="display: block;">
+              <app-maarch-message [content]="'lang.mailingMsg' | translate: {nbContacts: getNbContacts()}"></app-maarch-message>
+            </div>
+          }
+          @if (!sendMassMode) {
+            <div class="attachment-form-item">
+              <app-contact-autocomplete [controlAutocomplete]="attachment['recipient']" style="width:100%;" [singleMode]="true">
+              </app-contact-autocomplete>
+              <div class="fieldState">
+                <i class="fas fa-asterisk noMandatory"></i>
+              </div>
+            </div>
+          }
+          @if (attachment['signedResponse'].value !== undefined) {
+            <div class="attachment-form-item">
+              <mat-form-field class="input-form">
+                <input matInput placeholder="{{'lang.signedAlt' | translate}}" [title]="attachment['signDate'].value | fullDate"
+                  [value]="attachment['signDate'].value | timeAgo : 'full' | ucfirst" disabled>
+              </mat-form-field>
+              <div class="fieldState">
+                <i class="fas fa-asterisk noMandatory"></i>
+              </div>
+            </div>
+          }
+          @if (attachment['signedResponse'].value !== undefined) {
+            <div class="attachment-form-item">
+              <mat-form-field class="input-form">
+                <input matInput placeholder="{{'lang.signedAlt' | translate}} {{'lang.by' | translate}}"
+                  [formControl]="attachment['signatory']">
+              </mat-form-field>
+              <div class="fieldState">
+                <i class="fas fa-asterisk noMandatory"></i>
+              </div>
+            </div>
+          }
+          <mat-expansion-panel>
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                {{'lang.othersInfos' | translate}}
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <div class="attachment-form-item">
+              <mat-form-field class="input-form">
+                <input matInput placeholder="{{'lang.createdAlt' | translate}}"
+                  [title]="attachment['creationDate'].value | fullDate"
+                  [value]="attachment['creationDate'].value | timeAgo : 'full'" disabled>
+              </mat-form-field> <!-- EDISSYUM - NCH01 Changement des libellés Pièces Jointes | changement de lang.created par lang.createdAlt -->
+              <div class="fieldState">
+                <i class="fas fa-asterisk noMandatory"></i>
+              </div>
+            </div>
+            <div class="attachment-form-item">
+              <mat-form-field class="input-form">
+                <input matInput placeholder="{{'lang.createdAlt' | translate}} {{'lang.by' | translate}}"
+                  [formControl]="attachment['typistLabel']">
+              </mat-form-field> <!-- EDISSYUM - NCH01 Changement des libellés Pièces Jointes | changement de lang.created par lang.createdAlt -->
+              <div class="fieldState">
+                <i class="fas fa-asterisk noMandatory"></i>
+              </div>
+            </div>
+            @if (attachment['modificationDate'].value !== null) {
+              <div class="attachment-form-item">
+                <mat-form-field class="input-form">
+                  <input matInput placeholder="{{'lang.modified' | translate}}"
+                    [formControl]="attachment['modificationDate']"
+                    [value]="attachment['modificationDate'].value | timeAgo : 'full'">
+                </mat-form-field>
+                <div class="fieldState">
+                  <i class="fas fa-asterisk noMandatory"></i>
+                </div>
+              </div>
+            }
+            @if (attachment['modificationDate'].value !== null) {
+              <div class="attachment-form-item">
+                <mat-form-field class="input-form">
+                  <input matInput placeholder="{{'lang.modified' | translate}} {{'lang.by' | translate}}"
+                    [formControl]="attachment['modifiedBy']">
+                </mat-form-field>
+                <div class="fieldState">
+                  <i class="fas fa-asterisk noMandatory"></i>
+                </div>
+              </div>
+            }
+            <div class="attachment-form-item">
+              <mat-form-field class="input-form">
+                <input matInput placeholder="{{'lang.version' | translate}}"
+                  [formControl]="attachment['relation']"
+                  [value]="this.translate.instant('lang.version') + ' ' + attachment.relation.value">
+              </mat-form-field>
+              <div class="fieldState">
+                <i class="fas fa-asterisk noMandatory"></i>
+              </div>
+            </div>
+            <div class="attachment-form-item">
+              <mat-form-field class="input-form" (click)="picker.open()" style="cursor:pointer;">
+                <input [formControl]="attachment['validationDate']" matInput
+                  [matDatepicker]="picker" [placeholder]="this.translate.instant('lang.expectedReturnDate')" [min]="now"
+                  readonly style="cursor:pointer;">
+                @if (!attachment['validationDate'].value) {
+                  <mat-datepicker-toggle matSuffix [for]="picker"
+                    >
+                  </mat-datepicker-toggle>
+                }
+                <mat-datepicker [touchUi]="appService.getViewMode()" #picker></mat-datepicker>
+                @if (attachment['validationDate'].value && !attachment['validationDate'].disabled) {
+                  <button mat-button class="warn" matSuffix mat-icon-button
+                    (click)="$event.stopPropagation();attachment['validationDate'].reset();"
+                    [title]="this.translate.instant('lang.eraseValue')">
+                    <mat-icon style="color:#8e3e52" class="fa fa-calendar-times">
+                    </mat-icon>
+                  </button>
+                }
+              </mat-form-field>
+              <div class="fieldState">
+                @if (attachment['validationDate'].valid && isEmptyField(attachment['validationDate'])) {
+                  <i class="fas fa-asterisk noMandatory"
+                  ></i>
+                }
+                @if (attachment['validationDate'].valid && !isEmptyField(attachment['validationDate'])) {
+                  <i class="fas fa-check fieldFull"
+                  ></i>
+                }
+              </div>
+            </div>
+          </mat-expansion-panel>
+        </div>
+      }
+      @if (!loading) {
+        <mat-tab-group [selectedIndex]="selectedIndex" (selectedTabChange)="checkVersion($event)" class="pjList" animationDuration="0" style="height: 100%"> <!-- EDISSYUM - NCH01 Fix typist des nouvelles version de PJ | ajout du selectedTabChange -->
+          @if (attachment.res_id_master !== null) {
+            <mat-tab label="{{'lang.mainDocument' | translate}}">
+              <ng-template matTabContent>
+                <app-document-viewer #appDocumentViewer style="display:block;height:100%;width:100%;overflow: auto;" [editMode]="false"
+                  [resId]="attachment.resIdMaster.value" [title]="'lang.mainDocument' | translate">
+                </app-document-viewer>
+              </ng-template>
+            </mat-tab>
+          }
+          @if (attachment.status.value === 'SIGN') {
+            <mat-tab>
+              <ng-template mat-tab-label>
+                <span style="color:green">{{'lang.signedAttachment' | translate}}</span>
+              </ng-template>
+              <app-document-viewer #appDocumentViewer style="display:block;height:100%;width:100%;overflow: auto;text-align: left;" [editMode]="false"
+                [resId]="attachment.signedResponse.value" [mode]="'attachment'" [newPjVersion] = "newVersion"
+                [title]="attachment.chrono.value + ' - ' + attachment.title.value + ' (' + this.translate.instant('lang.signed') + ')'">
+              </app-document-viewer>
+            </mat-tab>
+          }
+          <mat-tab [id]="0"> <!-- EDISSYUM - NCH01 Fix typist des nouvelles version de PJ | ajout [id]="0" -->
+            <ng-template mat-tab-label>
+              <span style="color:#3A7C00">{{'lang.attachment' | translate}}</span>
+            </ng-template>
+            <app-document-viewer #appAttachmentViewer style="display:block;height:100%;width:100%;overflow: auto;" [editMode]="editMode"
+              [resId]="data.resId" [resIdMaster]="attachment['resIdMaster'].value" [mode]="'attachment'"
+              [format]="attachment['format'].value" [attachType]="attachment['type'].value"
+              (triggerEvent)="setDatasViewer($event)" [newPjVersion] = "newVersion"
+              [title]="attachment.chrono.value + ' - ' + attachment.title.value">
+            </app-document-viewer>
+          </mat-tab>
+          @for (version of versions; track version) {
+            <mat-tab label="{{'lang.attachment' | translate}} ({{'lang.version' | translate}} {{version.relation}})"
+              [id]="version['relation']"> <!-- EDISSYUM - NCH01 Fix typist des nouvelles version de PJ | ajout [id]="version['relation']" -->
+              <ng-template matTabContent>
+                <app-document-viewer #appDocumentViewer style="display:block;height:100%;width:100%;overflow: auto;" [editMode]="false"
+                  [resId]="version.resId" [mode]="'attachment'" [format]="attachment['format'].value" [newPjVersion] = "newVersion"
+                  [title]="attachment.chrono.value + ' - ' + attachment.title.value + ' (' + version.relation + ')'">
+                </app-document-viewer>
+              </ng-template>
+            </mat-tab>
+          }
+        </mat-tab-group>
+      }
+      @if (!loading) {
+        <div id="appToolsInformations" style="position: absolute;right: 16px;top: 4px;width:40px;height:40px;">
+          <app-tools-informations style="position: fixed; z-index:3; text-align: left; display: contents;" [resId]="attachment['resIdMaster'].value"></app-tools-informations>
+        </div>
+      }
+    </mat-dialog-content>
+    <div mat-dialog-actions class="actions">
+      @if (!newVersion) {
+        <button mat-raised-button class="primary" (click)="updateAttachment()"
+        [disabled]="!loading && (!editMode || !attachFormGroup.valid)">{{'lang.validate' | translate}}</button>
+      }
+      @if (!newVersion && sendMassMode && !loading) {
+        <button mat-raised-button class="primary" (click)="updateAttachment('mailing')"
+        [disabled]="!loading && (!editMode || !attachFormGroup.valid)">{{'lang.mailing' | translate}}</button>
+      }
+      @if (newVersion) {
+        <button mat-raised-button class="primary" (click)="createNewVersion()"
+        [disabled]="!editMode || !isEditing()">{{'lang.createNewVersion' | translate}}</button>
+      }
+      @if (newVersion && sendMassMode && !loading) {
+        <button mat-raised-button class="primary" (click)="createNewVersion('mailing')"
+        [disabled]="!editMode || !isEditing()">{{'lang.mailing' | translate}}</button>
+      }
+      @if (!loading && attachment.status.value === 'SIGN' && this.headerService.user.id == attachment.signatoryId.value && !signedByDefault) {
+        <button mat-raised-button class="warn"
+        (click)="deleteSignedVersion()" [disabled]="!editMode">{{'lang.deleteSignedVersion' | translate}}</button>
+      }
+      <button mat-raised-button mat-button [disabled]="loading" (click)="closeModal()">{{'lang.close' | translate}}</button>
+    </div>
+  </div>

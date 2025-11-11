@@ -1,0 +1,119 @@
+<div class="col-md-12">
+  @if (!loading) {
+    <div>
+      @if (errorMessage) {
+        <div class="alert-message alert-message-danger" role="alert">
+          <p>{{ errorMessage }}</p>
+        </div>
+      }
+    </div>
+  }
+</div>
+@if (!loading) {
+  <mat-list>
+    <div>
+      @if (visaWorkflow.items.length === 0) {
+        <div class="emptyContent">
+          {{'lang.noVisaWorkflow' | translate}}
+        </div>
+      }
+      @for (diffusion of visaWorkflow.items; track diffusion; let i = $index) {
+        <mat-list-item disableRipple
+          class="columns workflow"
+          [class.processed]="diffusion.process_date != null && (!stringIncludes(diffusion.process_comment, 'lang.hasInterruptedWorkflow' | translate) && !stringIncludes(diffusion.process_comment, 'lang.visaWorkflowInterrupted' | translate))"
+          [class.interrupt]="diffusion.process_date != null && (stringIncludes(diffusion.process_comment, 'lang.hasInterruptedWorkflow' | translate) || stringIncludes(diffusion.process_comment, 'lang.visaWorkflowInterrupted' | translate))">
+          <mat-icon class="fa fa-2x" [class.avatar]="!functions.empty(diffusion.picture)"
+            [class.fa-user]="functions.empty(diffusion.picture) && (diffusion.isValid || (diffusion.process_date === null && diffusion.delegatedBy === null))"
+            [class.fa-user-friends]="diffusion.process_date != null && diffusion.delegatedBy !== null"
+            [class.fa-user-slash]="!diffusion.isValid"
+            [title]="!diffusion.isValid ? ('lang.userNotValid' | translate) : ''" mat-list-icon
+            [class.invalid]="!diffusion.hasPrivilege || !diffusion.isValid"
+            [style.background-image]="!functions.empty(diffusion.picture) ? 'url('+diffusion.picture+')' : ''"
+            style="position: relative;color: #3A7C00">
+            @if (!functions.empty(diffusion.process_comment)) {
+              <i class="far fa-comment-dots commentBubble"
+              [matTooltip]="diffusion.process_comment"></i>
+            }
+          </mat-icon>
+          @if (diffusion.process_date != null && diffusion.isValid) {
+            <mat-icon mat-list-icon class="fa-2x fa"
+              [title]="diffusion.process_comment !== null ? diffusion.process_comment : ''"
+              [class.fa-hourglass]="diffusion.process_date == null"
+              [class.fa-thumbs-up]="diffusion.process_date != null && !stringIncludes(diffusion.process_comment, 'lang.hasInterruptedWorkflow' | translate) && !stringIncludes(diffusion.process_comment, 'lang.visaWorkflowInterrupted' | translate)"
+              [class.fa-hand-paper]="diffusion.process_date != null && stringIncludes(diffusion.process_comment, 'lang.hasInterruptedWorkflow' | translate)"
+              [class.fa-times]="diffusion.process_date != null && stringIncludes(diffusion.process_comment, 'lang.visaWorkflowInterrupted' | translate)"
+              [class.valid]="diffusion.process_date != null && !stringIncludes(diffusion.process_comment, 'lang.hasInterruptedWorkflow' | translate) && !stringIncludes(diffusion.process_comment, 'lang.visaWorkflowInterrupted' | translate)"
+              [class.invalid]="diffusion.process_date != null && (stringIncludes(diffusion.process_comment, 'lang.hasInterruptedWorkflow' | translate) || stringIncludes(diffusion.process_comment, 'lang.visaWorkflowInterrupted' | translate))"
+            style="opacity:0.5;"></mat-icon>
+          }
+          <div mat-line class="workflowLine">
+            <div class="workflowLineContainer">
+              <div class="workflowLineLabel" [class.unauthorized]="!diffusion.hasPrivilege || !diffusion.isValid">
+                {{diffusion.labelToDisplay}}
+                @if (diffusion.process_date != null && diffusion.delegatedBy !== null) {
+                  <mat-icon mat-list-icon class="fas fa-exclamation-circle"
+                    [title]="('lang.insteadOf' | translate) + ' ' + diffusion.delegatedBy"
+                  style="opacity:0.5;font-size: 125%;height: 15px;color: red;cursor: help;"></mat-icon>
+                }
+              </div>
+              <div class="workflowLineSubLabel"
+                [class.unauthorized]="!diffusion.hasPrivilege || !diffusion.isValid">
+                {{diffusion.item_entity}}
+              </div>
+              @if (diffusion.process_date != null && !stringIncludes(diffusion.process_comment, 'lang.visaWorkflowInterrupted' | translate) && !stringIncludes(diffusion.process_comment, 'lang.hasInterruptedWorkflow' | translate)) {
+                <div
+                  class="workflowLineProcessDate accent" title='{{diffusion.process_date | fullDate}}'>
+                  {{((functions.empty(diffusion.process_date) && diffusion.requested_signature) || diffusion.signatory) ? ('lang.signedUserDate' | translate) : ('lang.approvedUserDate' | translate)}} {{diffusion.process_date
+                | timeAgo : 'full'}}</div>
+              }
+              @if (diffusion.process_date != null && stringIncludes(diffusion.process_comment, 'lang.hasInterruptedWorkflow' | translate)) {
+                <div
+                  class="workflowLineProcessDate warn" title='{{diffusion.process_date | fullDate}}'>
+                {{'lang.interrupted' | translate}} {{diffusion.process_date | timeAgo : 'full'}}</div>
+              }
+            </div>
+            @if (diffusion.roles.length !== 1 && diffusion.hasPrivilege && diffusion.isValid) {
+              <div>
+                <ng-container>
+                  <button mat-button [matMenuTriggerFor]="menu" class="button-form-primary">
+                    <span class="menu-label">{{ selectedRoles[i] || 'Fonction' }}</span>
+                    <i class="fa fa-chevron-down menu-icon"></i>
+                  </button>
+                  <mat-menu #menu="matMenu">
+                    @for (action of diffusion.roles ; track action) {
+                      <button mat-menu-item (click)="selectRole(i, action.title)">
+                        <span style="flex: 1;">{{ action.title }}</span>
+                      </button>
+                    }
+                  </mat-menu>
+                </ng-container>
+              </div>
+            }
+            @if (diffusion.roles.length === 1) {
+              <div>
+                <ng-container>
+                  <b style="width: 130px;height: 35px;color: var(--maarch-color-primary);padding-left: 42px;padding-right: 42px;overflow: hidden;text-overflow: ellipsis;" > {{'lang.' + diffusion.currentRole + 'User' | translate}}</b>
+                </ng-container>
+              </div>
+            }
+            @if (!diffusion.hasPrivilege) {
+              <div class="invalid">
+                {{'lang.noPrivileges' | translate}}
+              </div>
+            }
+            @if (!diffusion.isValid) {
+              <div class="invalid invalidMsg">
+                {{'lang.userNotValid' | translate}}
+              </div>
+            }
+          </div>
+        </mat-list-item>
+      }
+    </div>
+  </mat-list>
+}
+@if (loading) {
+  <div style="display:flex;padding: 10px;">
+    <mat-spinner style="margin:auto;"></mat-spinner>
+  </div>
+}

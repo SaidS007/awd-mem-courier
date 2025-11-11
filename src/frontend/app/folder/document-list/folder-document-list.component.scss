@@ -1,0 +1,41 @@
+// EDISSYUM - NCH01 Fix affichage des courriers confidentiels dans les dossiers
+.watermark {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%) rotate(-20deg);
+    color: red;
+    font-weight: bold;
+    opacity: 0.6;
+}
+// END EDISSYUM - NCH01
+
+.dragPreview {
+    text-align: center;
+    border-radius: 5px;
+    background: white;
+    padding: 10px;
+    box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2), 0 8px 10px 1px rgba(0, 0, 0, 0.14), 0 3px 14px 2px rgba(0, 0, 0, 0.12);
+    color: var(--maarch-color-primary);
+}
+
+.followIcon {
+    color: var(--maarch-color-secondary); // EDISSYUM - NCH01 Changement des couleurs de MEM Courrier | Changer var(--maarch-color-secondary) en #EDFAF0
+}
+
+.folder-info {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.badge-folder {
+    cursor: pointer;
+    background: var(--maarch-color-secondary);
+    margin: 5px;
+    font-size: 12px;
+    border-radius: 3px;
+    opacity: 0.8;
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

@@ -1,0 +1,24 @@
+/.angular/cache
+.env
+.idea
+installed.lck
+config/config.json
+apps/maarch_entreprise/xml/log4php.xml
+*.log
+test/unitTests/build/
+modules/visa/xml/remoteSignatoryBooks.xml
+/dist/
+/dist-addin/
+node_modules/
+/custom/*
+/tmp/*
+# vendor/ is not versioned on develop, but should be versioned in release branches
+vendor/
+coverage/*
+!coverage/maarch-courrier/
+!coverage/maarch-courrier/cobertura-coverage.xml
+
+plugins/maarch-plugins-*/
+
+docker.local.env
+compose.dev.yml

@@ -1,0 +1,329 @@
+<mat-card id="viewThumbnailDoc" style="display:none;position: fixed;z-index: 2;margin-left: -28px; top: 0;">
+  @if (thumbnailUrl !== '') {
+    <img style="max-height: 100vh;" [src]="thumbnailUrl | secureUrl | async" />
+  }
+</mat-card>
+<ng-template #filterTemplate>
+  @if (!hideFilter) {
+    <app-filter-tool-adv-search #appFilterToolAdvSearch [filters]="dataFilters" [isLoadingResults]="isLoadingResults" (filterChanged)="launchSearch()"
+    ></app-filter-tool-adv-search>
+  }
+</ng-template>
+<ng-template #toolTemplate>
+  <div class="filterBadges">
+    @if (!emptyCriteria()) {
+      <span class="label badge-eraser" (click)="removeCriteria('_ALL')"
+        title="{{'lang.eraseAllFilters' | translate}}"><i class="fas fa-eraser"></i></span>
+      }
+      @for (critKey of criteria | keyvalue; track critKey) {
+        @if (isArrayType(critKey.value.values) && critKey.value.values.length <= 3) {
+          @for (val of critKey.value.values; track val) {
+            <span class="label badge-search"
+              [title]="appCriteriaTool?.getLabelValue(critKey.key,val)"
+              (click)="removeCriteria(critKey.key, val)"><i
+              class="fa {{indexingFieldService.getField(critKey.key).icon}}"
+            [title]="indexingFieldService.getField(critKey.key).label"></i>&nbsp;{{appCriteriaTool?.getLabelValue(critKey.key,val)}}&nbsp;<i
+          class="fa fa-times-circle"></i></span>
+        }
+      }
+      @if (isArrayType(critKey.value.values) && critKey.value.values.length > 3) {
+        <span class="label badge-search"
+          [title]="appCriteriaTool?.getLabelValues(critKey.key,critKey.value.values)"
+          (click)="removeCriteria(critKey.key)"><i
+          class="fa {{indexingFieldService.getField(critKey.key).icon}}"
+        [title]="indexingFieldService.getField(critKey.key).label"></i>&nbsp;{{critKey.value.values.length}}
+        valeurs&nbsp;<i class="fa fa-times-circle"></i></span>
+      }
+      @if (!isArrayType(critKey.value.values) && critKey.key !== 'meta') {
+        <span class="label badge-search"
+          [title]="appCriteriaTool?.getFormatLabel(critKey.key,critKey.value.values)"
+          (click)="removeCriteria(critKey.key)"><i
+          class="fa {{indexingFieldService.getField(critKey.key).icon}}"
+        [title]="indexingFieldService.getField(critKey.key).label"></i>&nbsp;{{appCriteriaTool?.getFormatLabel(critKey.key,critKey.value.values)}}&nbsp;<i
+      class="fa fa-times-circle"></i></span>
+    }
+    @if (!isArrayType(critKey.value.values) && critKey.key === 'meta') {
+      <span class="label badge-search" [title]="'meta'"
+        (click)="removeCriteria(critKey.key)">{{critKey.value.values}}&nbsp;<i
+      class="fa fa-times-circle"></i></span>
+    }
+  }
+</div>
+</ng-template>
+@if (isLoadingResults) {
+  <div class="example-loading-shade">
+    @if (isLoadingResults) {
+      <mat-spinner></mat-spinner>
+    }
+  </div>
+}
+<div class="table-head">
+  <div class="table-head-result">
+    @if (!singleSelection) {
+      <mat-checkbox style="color: #3A7C00;"
+        [checked]="selectedRes.length === resultsLength && selectedRes.length > 0"
+        [indeterminate]="selectedRes.length > 0 && selectedRes.length < resultsLength"
+        style="margin: 10px;padding-right: 10px;" title="{{'lang.selectAllResInBasket' | translate}}"
+        (change)="toggleAllRes($event)"> <!-- EDISSYUM - ALO01 Amélioration RGAA | Remplacer color="primary" par style="color: #3A7C00;" -->
+      </mat-checkbox>
+      }&nbsp;{{resultsLength}}
+      {{'lang.records' | translate | ucfirst}}&nbsp;@if (selectedRes.length > 0) {
+      <small>-
+        {{selectedRes.length}}
+      {{'lang.selected' | translate}}</small>
+    }
+  </div>
+  <div class="table-head-tool">
+    <span style="position: relative;">
+      <mat-paginator #paginatorResultList [length]="paginatorLength" [pageSizeOptions]="[10, 25, 50, 100, 150]"
+      class="paginatorResultList"></mat-paginator>
+      <app-select-page [paginator]="paginatorResultList"></app-select-page>
+    </span>
+    <span>
+      <span>
+        <app-tools-list #actionsList [selectedRes]="selectedRes" [from]="'search'"></app-tools-list>
+      </span>
+      @if (actionMode) {
+        <span>
+          <app-followed-action-list #actionsList [contextMode]="false"  [currentFolderInfo]="folderInfo"
+            [totalRes]="resultsLength" [selectedRes]="selectedRes"
+            (refreshEvent)="refreshDaoAfterAction()">
+          </app-followed-action-list>
+        </span>
+      }
+    </span>
+  </div>
+</div>
+<div [class.integratedContent]="!standalone">
+  <table cdkDropList id="document-list" [cdkDropListConnectedTo]="listTodrag()" [cdkDropListData]="data"
+    #tableBasketListSort="matSort" mat-table [dataSource]="data" matSort matSortActive="resId" matSortDisableClear
+    matSortDirection="asc" style="width:100%;" [cdkDropListDisabled]="dragInit || appService.getViewMode()">
+
+    <ng-container matColumnDef="resId">
+      <td mat-cell *matCellDef="let row" style="padding:0;border-top: solid 1px rgba(0, 0, 0, 0.12);">
+        @if (!appService.getViewMode() && row.display.length > 0) {
+          <div
+            class="sub-info column-{{templateColumns}}-list" style="cursor: initial;">
+            @for (data of row.display; track data) {
+              <span class="sub-info-data" [class]="data.cssClasses.join(' ')"
+                        style="flex:1;white-space: pre;overflow: hidden;text-overflow: ellipsis;
+                                padding-left: 5px;
+                                padding-right: 5px;"
+                [class.hasEvent]="data.event && data.displayValue !== ('lang.undefined' | translate)"
+                (click)="launchEventSubData(data, row)">
+                @if (data.value === 'getCreationAndProcessLimitDates') {
+                  @if (row.closing_date !== ('lang.undefined' | translate)) {
+                    <i class="fa fa-calendar" title="{{'lang.creationDate' | translate}}"></i>&nbsp;<span
+                    [class.highlightResult]="data.displayValue.creationDateHighlighted"
+                    [innerHTML]="data.displayValue.creationDate | timeAgo"
+                  title='{{data.displayValue.creationDate | fullDate}}'></span>
+                  - <i class="fa fa-lock" title="{{'lang.closingDate' | translate}}"></i>&nbsp;<span
+                  [class.highlightResult]="data.displayValue.closingDateHighlighted"
+                  [innerHTML]="row.closing_date | timeAgo"
+                title='{{row.closing_date | fullDate}}'></span>
+              }
+              @if (row.closing_date === ('lang.undefined' | translate)) {
+                <i class="fa fa-calendar" title="{{'lang.creationDate' | translate}}"></i>&nbsp;<span
+                [class.highlightResult]="data.displayValue.creationDateHighlighted"
+                [innerHTML]="data.displayValue.creationDate | timeAgo"
+              title='{{data.displayValue.creationDate | fullDate}}'></span>
+              - <i class="fa fa-stopwatch"
+            title="{{'lang.processLimitDate' | translate}}"></i>&nbsp;<span
+            [class.highlightResult]="data.displayValue.processLimitDateHighlighted"
+            [innerHTML]="data.displayValue.processLimitDate | timeLimit"
+          title='{{data.displayValue.processLimitDate | fullDate}}'></span>
+        }
+      }
+      @if (data.icon !== '') {
+        <i class="fa {{data.icon}}" title="{{data.label}}"></i>
+        &nbsp;
+      }
+      @if (data.value === 'getCategory') {
+        @if (!('lang.' + data.displayValue | translate)) {
+          <span style="opacity: 0.5"
+          title="id: {{data.displayValue}}">{{'lang.undefined' | translate}}</span>
+        }
+        @if (('lang.' + data.displayValue | translate)) {
+          <span
+          title="{{'lang.' + data.displayValue | translate}}">{{'lang.' + data.displayValue | translate}}</span>
+        }
+      }
+      @if (data.value !== 'getCategory' && data.value !== 'getCreationAndProcessLimitDates') {
+        @if (!data.value.includes('Date')) {
+          <span title="{{data.displayTitle}}"
+          [innerHTML]="data.displayValue"></span>
+        }
+        @if (data.value.includes('Date')) {
+          <span [innerHTML]="data.displayValue | timeAgo"></span>
+        }
+      }
+    </span>
+  }
+</div>
+}
+<div class="main-info" [class.selected-data]="row.checked">
+  <span style="width:50px;">
+    <mat-checkbox style="color: #3A7C00;" [checked]="row.checked" (change)="toggleRes($event,row)" [disabled]="singleSelection && !row.hasDocument"
+      (click)="$event.stopPropagation();"> <!-- EDISSYUM - ALO01 Amélioration RGAA | Remplacer color="primary" par style="color: #3A7C00;" -->
+    </mat-checkbox>
+  </span>
+  <button mat-icon-button (click)="$event.stopPropagation();toggleMailTracking(row)"
+    style="margin-left: -25px;" class="followIcon"
+    [title]="row.mailTracking === true ? ('lang.untrackThisMail' | translate) : ('lang.trackThisMail' | translate)">
+    <mat-icon [ngClass]="[row.mailTracking === true ? 'fas fa-star' : 'far fa-star']"
+    style="margin-bottom: 5px;"></mat-icon>
+  </button>
+  <span style="cursor:pointer;" [class.highlightResultIcon]="row.inStatus" class="main-info-status"
+    (click)="launch(row);">
+    @if (row.isLocked !== true) {
+      <mat-icon title="{{row.statusLabel}}"
+        [ngStyle]="{'color': row.priorityColor}" style="width: 100%; color: #3A7C00"
+        class="{{row.statusImage.charAt(0)}}{{row.statusImage.charAt(1)}} {{row.statusImage}} {{row.statusImage.charAt(0)}}{{row.statusImage.charAt(1)}}-2x">
+      </mat-icon>
+    }
+    @if (row.confidentiality === 'Y') {
+      <span
+      class="watermark">{{'lang.confidential' | translate}}</span>
+    }
+    @if (row.isLocked === true) {
+      <mat-icon
+        title="{{'lang.warnLockResInProgress' | translate}} : {{row.locker}}" style="color: red;"
+        class="fa fa-lock fa-2x">
+      </mat-icon>
+    }
+  </span>
+  @if (!appService.getViewMode()) {
+    <span (click)="launch(row);" class="main-info-data"
+      style="width:200px;text-align:center;cursor:pointer;">
+      @if (row.chrono === ('lang.undefined' | translate) && row.barcode !== ('lang.undefined' | translate)) {
+        <span style="color: rgba(0,0,0,0.4);font-size: 90%;">
+          <i title="{{'lang.barcode' | translate}}" class="fas fa-barcode"></i>&nbsp;<span
+          title="{{row.barcode_title}}"
+        [innerHTML]="row.barcode"></span>
+      </span>
+    }
+    @if (row.chrono !== ('lang.undefined' | translate)) {
+      <span title="{{row.chrono_title}}" [innerHTML]="row.chrono"></span>
+    }
+  </span>
+}
+<span class="main-info-data" (click)="launch(row);" style="font-weight:bold;flex:1;cursor:pointer;"
+  [class.undefined]="row.subject === ('lang.undefined' | translate)"
+  title="{{row.subject_title}}" [innerHTML]="row.subject">
+</span>
+@if (!router.url.includes('search')) {
+  <span class="main-info-actions" style="margin-right: 20px;">
+    @if (!appService.getViewMode()) {
+      <button mat-icon-button
+        [title]="row.hasDocument ? ('lang.viewResource' | translate) : ('lang.noDocument' | translate)"
+        [disabled]="!row.hasDocument"
+        (click)="$event.stopPropagation();viewDocument(row)"
+        (mouseenter)="viewThumbnail(row);"
+        (mouseleave)="closeThumbnail();">
+        <mat-icon style="color: #3A7C00" class="fa" [ngClass]="[row.hasDocument ? 'fa-eye' : 'fa-eye-slash']">
+        </mat-icon>
+      </button>
+    }
+  </span>
+}
+@if (sidenavRight !== undefined) {
+  <span class="main-info-action">
+    <button mat-icon-button title="{{'lang.mailsSentAlt' | translate}}"
+      (click)="$event.stopPropagation();togglePanel('sentResources',row)"
+      [class.noData]="row.countSentResources === 0">
+      <mat-icon matBadgeHidden="{{row.countSentResources === 0}}" fontSet="fas"
+        matBadge="{{row.countSentResources}}" fontIcon="fa-envelope fa-2x" [color]="sidenavRight.opened && row.checked && currentMode === 'sentResources' ? 'primary' : ''">
+      </mat-icon>
+    </button>
+    <button mat-icon-button [class.highlightResultIcon]="row.inNotes"
+      title="{{'lang.notes' | translate}}"
+      (click)="$event.stopPropagation();togglePanel('note',row)"
+      [class.noData]="row.countNotes === 0">
+      <mat-icon matBadgeHidden="{{row.countNotes === 0}}" fontSet="fas"
+        matBadge="{{row.countNotes}}" fontIcon="fa-comments fa-2x"
+        [color]="sidenavRight.opened && row.checked && currentMode === 'note' ? 'primary' : ''">
+      </mat-icon>
+    </button>
+    <button mat-icon-button title="{{'lang.attachments' | translate}}"
+      [class.highlightResultIcon]="row.inAttachments"
+      (click)="$event.stopPropagation();togglePanel('attachment',row)"
+      [class.noData]="row.countAttachments === 0">
+      <mat-icon matBadgeHidden="{{row.countAttachments === 0}}" fontSet="fas"
+        matBadge="{{row.countAttachments}}" fontIcon="fa-paperclip fa-2x"
+        [color]="sidenavRight.opened && row.checked && currentMode === 'attachment' ? 'primary' : ''">
+      </mat-icon>
+    </button>
+    <button mat-icon-button title="{{'lang.diffusionList' | translate}}"
+      [class.highlightResultIcon]="row.inDiffusions"
+      (click)="$event.stopPropagation();togglePanel('diffusion',row)">
+      <mat-icon fontSet="fas" fontIcon="fa-sitemap fa-2x"
+        [color]="sidenavRight.opened && row.checked && currentMode === 'diffusion' ? 'primary' : ''">
+      </mat-icon>
+    </button>
+    @if (!appService.getViewMode()) {
+      <button mat-icon-button
+        title="{{row.hasDocument ? ('lang.viewResource' | translate) : ('lang.noDocument' | translate)}}"
+        (click)="$event.stopPropagation();viewDocument(row)" (mouseenter)="viewThumbnail(row);"
+        (mouseleave)="closeThumbnail();" [disabled]="!row.hasDocument">
+        <mat-icon class="fa" [ngClass]="[row.hasDocument ? 'fa-eye' : 'fa-eye-slash']">
+        </mat-icon>
+      </button>
+    }
+    @if (!appService.getViewMode()) {
+      <button mat-icon-button
+        title="{{'lang.linkDetails' | translate}}" [class.highlightResult]="row.inDocument"
+        (click)="$event.stopPropagation();goToDetail(row);">
+        <mat-icon fontSet="fas" fontIcon="fa-info-circle fa-2x"></mat-icon>
+      </button>
+    }
+  </span>
+}
+</div>
+@if (row.folders !== undefined && row.folders.length > 0 && actionMode && this.displayFolder) {
+  <div class="folder-info"> <!-- EDISSYUM - EME01 Fix sur l'affichage du nom du dossier (emplacement fixe) d'un courrier | ajouter && this.displayFolder -->
+    @for (folder of row.folders | sortBy : 'label'; track folder) {
+      <span class="badge badge-folder"
+        (click)="$event.stopPropagation();goToFolder(folder);"
+        title="{{'lang.goToFolder' | translate}} : {{folder.label}}"><i class="fa fa-folder"></i>
+      {{folder.label}}</span>
+    }
+  </div>
+}
+</td>
+</ng-container>
+<tr mat-row *matRowDef="let row; columns: displayedColumnsBasket;" (contextmenu)="open($event,row);"
+  class="rowData" style="cursor: pointer;" [class.locked]="row.isLocked === true" cdkDrag
+  [cdkDragDisabled]="!row.allowed" (cdkDragStarted)="selectSpecificRes(row);" [cdkDragData]="row">
+  <div class="example-custom-placeholder" *cdkDragPlaceholder></div>
+  <div class="dragPreview" *cdkDragPreview><i class="fas fa-envelope-open-text fa-2x"></i>
+  <br />
+  {{'lang.classifyInFolder' | translate}} :
+  <b>{{row.chrono}}</b>
+</div>
+</tr>
+</table>
+</div>
+<div class="table-head">
+</div>
+<ng-template #panelTemplate>
+  @if (innerHtml) {
+    <div [matTooltip]="currentChrono" [innerHTML]="innerHtml" style="height: 100%;overflow: hidden;">
+    </div>
+  }
+  <div style="display:flex;position: sticky;top: 0px;z-index: 2;">
+    <button mat-icon-button (click)="sidenavRight.close()" style="font-size: 20px;color:#666;">
+      <mat-icon class="fa fa-arrow-right"></mat-icon>
+    </button>
+  </div>
+  <app-panel-list #appPanelList
+    (refreshBadgeNotes)="refreshBadgeNotes($event)"
+    (refreshBadgeAttachments)="refreshBadgeAttachments($event)"
+  (refreshBadgeSentResource)="refreshBadgeSentResource($event)"></app-panel-list>
+  <mat-divider></mat-divider>
+</ng-template>
+@if (actionMode) {
+  <app-followed-action-list #actionsListContext [contextMode]="true" [currentFolderInfo]="folderInfo"
+    [totalRes]="resultsLength" [selectedRes]="selectedRes" (refreshEvent)="refreshDaoAfterAction()"
+    (refreshPanelFolders)="foldersService.getFolders()">
+  </app-followed-action-list>
+}

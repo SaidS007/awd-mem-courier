@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  db-mc:
+    image: postgres:16-alpine
+    container_name: mem-postgres
+    restart: unless-stopped
+    command: ["-c", "datestyle=iso,dmy"]
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - sql_path:/home/sql
+      - script_path:/home/scripts
+    environment:
+      POSTGRES_DB: ${DB_NAME:-mem}
+      POSTGRES_USER: ${DB_USER:-edissyum}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-edissyum}
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-edissyum} -d ${DB_NAME:-mem}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app-mc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mem-courrier
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh" ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    volumes:
+      - ${DOCSERVERS_ROOT_PATH:-./docservers}:/opt/maarch/docservers:rw
+      - ${CUSTOM_PATH:-./custom}:/var/www/html/MaarchCourrier/custom:rw
+      - sql_path:/var/www/html/MaarchCourrier/sql:rw
+      - script_path:/home/scripts
+      - ${LIBRAIRIES_PATH:-./librairies}:/app/librairies
+      - ${CRON_CONFIGURATION_PATH:-./cron.d}:/etc/cron.d
+      - opencapture_data:/var/www/html/opencapture
+    ports:
+      - ${APP_PORT:-8080}:80
+    environment:
+      LIBRARIES_DIR: /app/librairies
+      MAARCH_TMP_DIR: ${MAARCH_TMP_DIR:-/tmp/maarch}
+      DB_HOST: db-mc
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-mem}
+      DB_USER: ${DB_USER:-edissyum}
+      DB_PASSWORD: ${DB_PASSWORD:-edissyum}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT:-993}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+    depends_on:
+      db-mc:
+        condition: service_healthy
+
+  opencapture-installer:
+    image: alpine:latest
+    container_name: mem-opencapture
+    restart: "no"
+    volumes:
+      - opencapture_data:/var/www/html/opencapture
+      - script_path:/home/scripts
+    command: >
+      sh -c "
+        apk add --no-cache git &&
+        git clone https://github.com/edissyum/opencaptureformem.git /var/www/html/opencapture &&
+        chmod +x /var/www/html/opencapture/install.sh &&
+        echo 'Open-Capture for MEM téléchargé et prêt pour l installation'
+      "
+    depends_on:
+      - app-mc
+
+volumes:
+  db-data:
+  sql_path:
+  script_path:
+  opencapture_data:
