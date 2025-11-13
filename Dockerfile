@@ -57,7 +57,7 @@ RUN sed -i 's/^exec /service cron start\n\nexec /' /usr/local/bin/apache2-foregr
 #
 
 # Copy the app files inside the container
-COPY --chown=www-data:www-data index.php LICENSE.txt CONTRIBUTING.md CLA.md .htaccess /var/www/html/MaarchCourrier/
+COPY --chown=www-data:www-data index.php LICENSE.txt CONTRIBUTING.md *.md .htaccess /var/www/html/MaarchCourrier/
 COPY --chown=www-data:www-data modules /var/www/html/MaarchCourrier/modules
 COPY --chown=www-data:www-data install /var/www/html/MaarchCourrier/install
 COPY --chown=www-data:www-data rest /var/www/html/MaarchCourrier/rest
