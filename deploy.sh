@@ -82,7 +82,7 @@ sudo chmod -R 755 custom docservers librairies cron.d logs
 
 # Démarrer les services
 print_info "Démarrage des services..."
-docker compose -p mc_24 -f compose.yml --env-file .env up -d
+docker compose -p mc_24 -f docker-compose.yml --env-file .env up -d
 
 if [ $? -ne 0 ]; then
     print_error "Erreur lors du démarrage des services"
