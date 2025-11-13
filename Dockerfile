@@ -27,8 +27,9 @@ RUN chmod +x /usr/local/bin/install-php-extensions  \
     && a2enmod rewrite headers
 
 ## Application files
-RUN mkdir -p --mode=700 /var/www/html/MaarchCourrier /opt/maarch/docservers \
+RUN mkdir -p --mode=700 /var/www/html/MaarchCourrier /var/www/html/MaarchCourrier/dist /opt/maarch/docservers \
   && chown www-data:www-data /var/www/html/MaarchCourrier /opt/maarch/docservers
+RUN touch /var/www/html/MaarchCourrier/dist/index.html
 
 WORKDIR /var/www/html/MaarchCourrier
 

@@ -16,6 +16,10 @@ print_success() { echo -e "${GREEN}✅ $1${NC}"; }
 print_warning() { echo -e "${YELLOW}⚠️ $1${NC}"; }
 print_error() { echo -e "${RED}❌ $1${NC}"; }
 
+# Activer BuildKit globalement
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+
 # Vérifier Docker
 if ! command -v docker &> /dev/null; then
     print_error "Docker n'est pas installé"
@@ -80,8 +84,9 @@ mkdir -p custom docservers librairies cron.d logs
 sudo chown -R $USER:$USER custom docservers librairies cron.d logs
 sudo chmod -R 755 custom docservers librairies cron.d logs
 
-# Démarrer les services
-print_info "Démarrage des services..."
+# Démarrer les services AVEC BuildKit
+print_info "Démarrage des services avec BuildKit..."
+docker-compose -p mc_24 -f docker-compose.yml --env-file .env build --no-cache
 docker-compose -p mc_24 -f docker-compose.yml --env-file .env up -d
 
 if [ $? -ne 0 ]; then
@@ -95,20 +100,20 @@ sleep 30
 
 # Vérifier l'état des services
 print_info "Vérification de l'état des services..."
-docker compose -p mc_24 -f compose.yml ps
+docker-compose -p mc_24 -f docker-compose.yml ps
 
 # Installer Open-Capture seulement si nécessaire
 if [ "$OPENCAPTURE_INSTALLED" = "false" ]; then
     print_info "Installation d'Open-Capture for MEM..."
     
     # Copier le script d'installation
-    docker compose -p mc_24 -f compose.yml cp install-opencapture.sh app-mc:/home/scripts/
+    docker-compose -p mc_24 -f docker-compose.yml cp install-opencapture.sh app-mc:/home/scripts/
     
     # Donner les permissions d'exécution
-    docker compose -p mc_24 -f compose.yml exec app-mc chmod +x /home/scripts/install-opencapture.sh
+    docker-compose -p mc_24 -f docker-compose.yml exec app-mc chmod +x /home/scripts/install-opencapture.sh
     
     # Exécuter l'installation
-    docker compose -p mc_24 -f compose.yml exec app-mc /bin/bash -c "cd /home/scripts && ./install-opencapture.sh"
+    docker-compose -p mc_24 -f docker-compose.yml exec app-mc /bin/bash -c "cd /home/scripts && ./install-opencapture.sh"
     
     if [ $? -eq 0 ]; then
         print_success "Open-Capture installé avec succès"
@@ -117,12 +122,12 @@ if [ "$OPENCAPTURE_INSTALLED" = "false" ]; then
     else
         print_warning "L'installation a rencontré des problèmes"
         print_info "Vous pouvez réessayer manuellement:"
-        echo "  docker compose -p mc_24 -f compose.yml exec app-mc /bin/bash"
+        echo "  docker-compose -p mc_24 -f docker-compose.yml exec app-mc /bin/bash"
         echo "  cd /home/scripts && ./install-opencapture.sh"
     fi
 else
     print_info "Redémarrage des services Open-Capture..."
-    docker compose -p mc_24 -f compose.yml exec app-mc /bin/bash -c \
+    docker-compose -p mc_24 -f docker-compose.yml exec app-mc /bin/bash -c \
         "systemctl restart OCVerifier-worker_mycompany.service OCSplitter-worker_mycompany.service fs-watcher.service 2>/dev/null || true"
 fi
 
