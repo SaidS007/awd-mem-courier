@@ -59,7 +59,7 @@ fi
 # Créer un fichier d'information
 echo "Sauvegarde créée le: $(date)" > "$BACKUP_DIR/backup-info.txt"
 echo "Conteneurs:" >> "$BACKUP_DIR/backup-info.txt"
-docker compose -p mc_24 -f compose.yml ps >> "$BACKUP_DIR/backup-info.txt"
+docker-compose -p mc_24 -f docker-compose.yml ps >> "$BACKUP_DIR/backup-info.txt"
 
 echo -e "${GREEN}✅ Sauvegarde terminée dans $BACKUP_DIR/${NC}"
 echo "Taille du backup: $(du -sh "$BACKUP_DIR" | cut -f1)"

@@ -23,7 +23,7 @@ echo -e "${BLUE}🔄 Restauration depuis $BACKUP_DIR...${NC}"
 
 # Arrêter les services
 echo "Arrêt des services..."
-docker compose -p mc_24 -f compose.yml down
+docker-compose -p mc_24 -f docker-compose.yml down
 
 # Restaurer les volumes Docker
 echo -e "${BLUE}📦 Restauration des volumes Docker...${NC}"
@@ -90,7 +90,7 @@ fi
 
 # Redémarrer les services
 echo "Redémarrage des services..."
-docker compose -p mc_24 -f compose.yml up -d
+docker-compose -p mc_24 -f docker-compose.yml up -d
 
 echo -e "${GREEN}✅ Restauration terminée!${NC}"
 echo "Les services redémarrent..."

@@ -15,7 +15,7 @@ services:
       POSTGRES_HOST_AUTH_METHOD: "trust"
 
   app-mc:
-#    image: registry.maarch.org/maarch-dev/courrier:main
+    #image: registry.maarch.org/maarch-dev/courrier:main
     build: #build from docker file instead of pulling image from registry
      context: .
      dockerfile: Dockerfile
