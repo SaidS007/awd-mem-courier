@@ -3,35 +3,33 @@ set -e
 
 echo "🚀 Déploiement de MEM Courrier avec Open-Capture..."
 
-# Couleurs pour l'affichage
+# Couleurs
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Fonctions utilitaires
+# Fonctions
 print_info() { echo -e "${BLUE}ℹ️ $1${NC}"; }
 print_success() { echo -e "${GREEN}✅ $1${NC}"; }
 print_warning() { echo -e "${YELLOW}⚠️ $1${NC}"; }
 print_error() { echo -e "${RED}❌ $1${NC}"; }
 
-# Activer BuildKit globalement
-export DOCKER_BUILDKIT=1
-export COMPOSE_DOCKER_CLI_BUILD=1
-
-# Vérifier Docker
-if ! command -v docker &> /dev/null; then
+# Vérifications
+if ! command -v docker > /dev/null; then
     print_error "Docker n'est pas installé"
-    echo "📥 Installation: sudo apt-get update && sudo apt-get install docker.io docker-compose"
     exit 1
 fi
 
-# Vérifier Docker Compose
-if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
-    print_error "Docker Compose n'est pas disponible"
-    echo "📥 Installation: sudo apt-get install docker-compose-plugin"
+if ! command -v docker-compose > /dev/null; then
+    print_error "Docker Compose n'est pas installé"
     exit 1
+fi
+
+# Vérifier le mode Swarm
+if docker info | grep -q "Swarm: active"; then
+    print_warning "Docker est en mode Swarm - utilisation de docker-compose classique"
 fi
 
 # Vérifier le fichier .env
@@ -41,114 +39,120 @@ if [ ! -f ".env" ]; then
         cp ".env.example" ".env"
         print_info "Fichier .env créé à partir de .env.example"
         echo "📝 Veuillez configurer le fichier .env avant de continuer"
-        nano ".env" || vim ".env" || vi ".env"
+        ${EDITOR:-nano} ".env"
     else
         print_error "Fichier .env.example non trouvé"
         exit 1
     fi
 fi
 
-# Charger les variables d'environnement
+# Charger la configuration
 set -a
 source .env
 set +a
 
-# Vérification des paramètres email
+# Vérifications des paramètres obligatoires
 if [ -z "$EMAIL_USER" ] || [ -z "$EMAIL_PASSWORD" ]; then
     print_error "EMAIL_USER et EMAIL_PASSWORD doivent être configurés dans .env"
     exit 1
 fi
 
-# Vérifier si Open-Capture est déjà installé
-print_info "Vérification de l'état de l'installation..."
-if docker volume inspect mc_24_opencapture_data &> /dev/null; then
-    print_success "Open-Capture est déjà installé"
-    OPENCAPTURE_INSTALLED="true"
-else
-    print_info "Open-Capture nécessite une installation"
-    OPENCAPTURE_INSTALLED="false"
+# Vérifier que les scripts nécessaires existent
+if [ ! -f "install-mem.sh" ]; then
+    print_error "Le script install-mem.sh est manquant"
+    echo "📝 Veuillez créer le fichier install-mem.sh avec le contenu fourni"
+    exit 1
 fi
 
-# Mettre à jour le .env avec l'état d'installation
-if grep -q "OPENCAPTURE_INSTALLED" .env; then
-    sed -i "s/OPENCAPTURE_INSTALLED=.*/OPENCAPTURE_INSTALLED=$OPENCAPTURE_INSTALLED/" .env
-else
-    echo "OPENCAPTURE_INSTALLED=$OPENCAPTURE_INSTALLED" >> .env
-fi
+# Nettoyage préalable
+print_info "Nettoyage préalable..."
+docker-compose -p mc_24 -f docker-compose.yml down 2>/dev/null || true
 
-# Créer les répertoires locaux
+# Créer les répertoires
 print_info "Création des répertoires..."
-mkdir -p custom docservers librairies cron.d logs
+mkdir -p custom cron.d sql
+sudo chmod 755 custom cron.d sql
 
-# Donner les permissions appropriées
-sudo chown -R $USER:$USER custom docservers librairies cron.d logs
-sudo chmod -R 755 custom docservers librairies cron.d logs
+# Construction des images
+print_info "Construction des images..."
+if ! docker-compose -p mc_24 -f docker-compose.yml build --no-cache; then
+    print_error "Échec de la construction des images"
+    exit 1
+fi
 
-# Démarrer les services AVEC BuildKit
-print_info "Démarrage des services avec BuildKit..."
-docker-compose -p mc_24 -f docker-compose.yml --env-file .env build --no-cache
-docker-compose -p mc_24 -f docker-compose.yml --env-file .env up -d
-
-if [ $? -ne 0 ]; then
-    print_error "Erreur lors du démarrage des services"
+# Démarrage des services
+print_info "Démarrage des services..."
+if ! docker-compose -p mc_24 -f docker-compose.yml up -d; then
+    print_error "Échec du démarrage des services"
     exit 1
 fi
 
 # Attendre le démarrage
-print_info "Attente du démarrage des services (30 secondes)..."
-sleep 30
+print_info "Attente du démarrage des services (40 secondes)..."
+sleep 40
 
-# Vérifier l'état des services
+# Vérification
 print_info "Vérification de l'état des services..."
 docker-compose -p mc_24 -f docker-compose.yml ps
 
-# Installer Open-Capture seulement si nécessaire
-if [ "$OPENCAPTURE_INSTALLED" = "false" ]; then
-    print_info "Installation d'Open-Capture for MEM..."
-    
-    # Copier le script d'installation
-    docker-compose -p mc_24 -f docker-compose.yml cp install-opencapture.sh app-mc:/home/scripts/
-    
-    # Donner les permissions d'exécution
-    docker-compose -p mc_24 -f docker-compose.yml exec app-mc chmod +x /home/scripts/install-opencapture.sh
-    
-    # Exécuter l'installation
-    docker-compose -p mc_24 -f docker-compose.yml exec app-mc /bin/bash -c "cd /home/scripts && ./install-opencapture.sh"
-    
-    if [ $? -eq 0 ]; then
-        print_success "Open-Capture installé avec succès"
-        # Mettre à jour le statut dans .env
-        sed -i "s/OPENCAPTURE_INSTALLED=.*/OPENCAPTURE_INSTALLED=true/" .env
-    else
-        print_warning "L'installation a rencontré des problèmes"
-        print_info "Vous pouvez réessayer manuellement:"
-        echo "  docker-compose -p mc_24 -f docker-compose.yml exec app-mc /bin/bash"
-        echo "  cd /home/scripts && ./install-opencapture.sh"
-    fi
+# Vérifier que MEM Courrier s'est installé correctement
+print_info "Vérification de l'installation de MEM Courrier..."
+if docker-compose -p mc_24 -f docker-compose.yml exec -T app-mc test -f "/var/www/html/MaarchCourrier/index.php"; then
+    print_success "MEM Courrier installé avec succès"
 else
-    print_info "Redémarrage des services Open-Capture..."
-    docker-compose -p mc_24 -f docker-compose.yml exec app-mc /bin/bash -c \
-        "systemctl restart OCVerifier-worker_mycompany.service OCSplitter-worker_mycompany.service fs-watcher.service 2>/dev/null || true"
+    print_warning "MEM Courrier n'est pas entièrement installé"
+    echo "🔍 Vérifiez les logs: docker-compose -p mc_24 -f docker-compose.yml logs app-mc"
 fi
 
-# Affichage final
+# Installation d'Open-Capture
+if [ "${INSTALL_OPENCAPTURE:-true}" = "true" ]; then
+    print_info "Installation d'Open-Capture for MEM..."
+    
+    # Vérifier si Open-Capture est déjà installé
+    if docker-compose -p mc_24 -f docker-compose.yml exec -T app-mc test -f "/var/www/html/opencapture/install.sh"; then
+        print_info "Open-Capture est déjà installé"
+    else
+        # Copier et exécuter le script d'installation
+        if [ -f "install-opencapture.sh" ]; then
+            if docker-compose -p mc_24 -f docker-compose.yml exec -T app-mc /home/scripts/install-opencapture.sh; then
+                print_success "Open-Capture installé avec succès"
+                # Mettre à jour le .env
+                if grep -q "OPENCAPTURE_INSTALLED" .env; then
+                    sed -i "s/OPENCAPTURE_INSTALLED=.*/OPENCAPTURE_INSTALLED=true/" .env
+                else
+                    echo "OPENCAPTURE_INSTALLED=true" >> .env
+                fi
+            else
+                print_warning "L'installation d'Open-Capture a rencontré des problèmes"
+            fi
+        else
+            print_warning "Script install-opencapture.sh non trouvé"
+        fi
+    fi
+fi
+
+# Vérification finale
+print_info "Vérification finale..."
+if curl -s -f http://localhost:${APP_PORT:-8080} > /dev/null; then
+    print_success "MEM Courrier est accessible"
+else
+    print_warning "MEM Courrier n'est pas encore accessible - vérifiez les logs"
+fi
+
+# Finalisation
 print_success "Déploiement terminé!"
 echo ""
 echo "🌐 ACCÈS AUX APPLICATIONS:"
-echo "   MEM Courrier:      http://localhost:${APP_PORT:-8080}"
-echo "   Open-Capture:      http://localhost:${APP_PORT:-8080}/opencapture"
+echo "   MEM Courrier: http://localhost:${APP_PORT:-8080}"
+echo "   Open-Capture: http://localhost:${APP_PORT:-8080}/opencapture"
 echo ""
-echo "🔑 IDENTIFIANTS:"
-echo "   MEM:               admin / admin"
-echo "   Open-Capture:      admin / admin"
+echo "🔑 POUR FINALISER MEM COURRIER:"
+echo "   1. Accédez à http://localhost:${APP_PORT:-8080}/install"
+echo "   2. Suivez l'assistant d'installation"
+echo "   3. Utilisez les identifiants de base de données configurés dans .env"
 echo ""
-echo "📁 DONNÉES PERSISTÉES DANS:"
-echo "   - ./custom/              (configuration MEM)"
-echo "   - ./docservers/          (documents MEM)"
-echo "   - Volumes Docker:        mc_24_* (Open-Capture et base de données)"
-echo ""
-echo "🔍 POUR VERIFIER L'ÉTAT:"
-echo "   ./check-status.sh"
-echo ""
-echo "💾 POUR SAUVEGARDER:"
-echo "   ./backup.sh"
+echo "📋 COMMANDES UTILES:"
+echo "   Vérifier les logs: docker-compose -p mc_24 -f docker-compose.yml logs app-mc"
+echo "   Arrêter: docker-compose -p mc_24 -f docker-compose.yml down"
+echo "   Redémarrer: docker-compose -p mc_24 -f docker-compose.yml restart"
+

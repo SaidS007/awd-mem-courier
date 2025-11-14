@@ -7,15 +7,16 @@ services:
     command: ["-c", "datestyle=iso,dmy"]
     volumes:
       - db-data:/var/lib/postgresql/data
-      - sql_path:/home/sql
-      - script_path:/home/scripts
+      - ./sql:/docker-entrypoint-initdb.d
+    ports:
+      - "${DB_PORT:-5432}:5432"
     environment:
       POSTGRES_DB: ${DB_NAME:-mem}
-      POSTGRES_USER: ${DB_USER:-edissyum}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-edissyum}
+      POSTGRES_USER: ${DB_USER:-memuser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mempassword}
       POSTGRES_HOST_AUTH_METHOD: "trust"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-edissyum} -d ${DB_NAME:-mem}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-memuser} -d ${DB_NAME:-mem}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -25,61 +26,63 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "healthcheck.sh" ]
-      interval: 10s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
+    #healthcheck:
+    #  test: ["CMD", "/home/scripts/healthcheck.sh"]
+    #  interval: 30s
+    #  timeout: 10s
+    #  retries: 3
+    #  start_period: 40s
     volumes:
-      # Volumes persistants pour MEM
-      - ${DOCSERVERS_ROOT_PATH:-./docservers}:/opt/maarch/docservers:rw
-      - ${CUSTOM_PATH:-./custom}:/var/www/html/MaarchCourrier/custom:rw
-      - sql_path:/var/www/html/MaarchCourrier/sql:rw
-      - script_path:/home/scripts
-      - ${LIBRAIRIES_PATH:-./librairies}:/app/librairies
-      - ${CRON_CONFIGURATION_PATH:-./cron.d}:/etc/cron.d
+      # Volumes pour MEM Courrier
+      - mem-data:/var/www/html/MaarchCourrier
+      - docservers-data:/opt/maarch/docservers
+      - mem-logs:/var/log/maarch
+      - ./custom:/var/www/html/MaarchCourrier/custom
+      - ./cron.d:/etc/cron.d
       
-      # Volumes persistants pour Open-Capture
-      - opencapture_data:/var/www/html/opencapture:rw
-      - opencapture_docservers:/var/docservers/opencapture:rw
-      - opencapture_share:/var/share:rw
-      - opencapture_venv:/home/www-data/python-venv/opencapture:rw
-      - opencapture_logs:/var/www/html/opencapture/custom/mycompany/data/log:rw
-      
-      # Volume pour les données temporaires
-      - temp_data:/tmp:rw
+      # Volumes pour Open-Capture
+      - opencapture-data:/var/www/html/opencapture
+      - opencapture-docservers:/var/docservers/opencapture
+      - opencapture-share:/var/share
+      - opencapture-logs:/var/log/opencapture
     ports:
-      - ${APP_PORT:-8080}:80
+      - "${APP_PORT:-8080}:80"
     environment:
-      LIBRARIES_DIR: /app/librairies
-      MAARCH_TMP_DIR: ${MAARCH_TMP_DIR:-/tmp/maarch}
+      # Base de données
       DB_HOST: db-mc
       DB_PORT: 5432
       DB_NAME: ${DB_NAME:-mem}
-      DB_USER: ${DB_USER:-edissyum}
-      DB_PASSWORD: ${DB_PASSWORD:-edissyum}
+      DB_USER: ${DB_USER:-memuser}
+      DB_PASSWORD: ${DB_PASSWORD:-mempassword}
+      
+      # Configuration MEM
+      MEM_VERSION: 2505
+      MEM_PATH: /var/www/html/MaarchCourrier
+      DOCSERVERS_PATH: /opt/maarch/docservers
+      
+      # Configuration email
       EMAIL_HOST: ${EMAIL_HOST}
       EMAIL_PORT: ${EMAIL_PORT:-993}
       EMAIL_USER: ${EMAIL_USER}
       EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      
+      # Configuration Open-Capture
+      OPENCAPTURE_PATH: /var/www/html/opencapture
+      CUSTOM_ID: ${CUSTOM_ID:-mycompany}
       OPENCAPTURE_INSTALLED: ${OPENCAPTURE_INSTALLED:-false}
     depends_on:
       db-mc:
         condition: service_healthy
 
 volumes:
-  # Volumes pour MEM
+  # Volumes pour MEM Courrier
   db-data:
-  sql_path:
-  script_path:
+  mem-data:
+  docservers-data:
+  mem-logs:
   
   # Volumes pour Open-Capture
-  opencapture_data:
-  opencapture_docservers:
-  opencapture_share:
-  opencapture_venv:
-  opencapture_logs:
-  
-  # Volume temporaire
-  temp_data:
+  opencapture-data:
+  opencapture-docservers:
+  opencapture-share:
+  opencapture-logs:

@@ -1,90 +1,99 @@
-# Utilise l'image de base MEM Courrier
-FROM docker.io/php:8.1-apache-bullseye
+FROM debian:bookworm-slim
 
-# Copy dependencies lists
-COPY ./container/dependences.apt ./container/dependences.php /mnt/
+# Variables d'environnement
+ENV DEBIAN_FRONTEND=noninteractive
+ENV MEM_VERSION=2505
 
-## Dependencies
-RUN apt-get update \
-    && apt-get install --no-install-recommends -y debsecan \
-    && apt-get install --no-install-recommends -y $(debsecan --suite buster --format packages --only-fixed) \
-    && apt-get purge -y debsecan \
-    && apt-get install --no-install-recommends -y $(cat /mnt/dependences.apt) \
-    && sed -i 's/rights="none" pattern="PDF"/rights="read" pattern="PDF"/' /etc/ImageMagick-6/policy.xml \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /mnt/dependences.apt \
-    && curl -sSLf \
-               -o /usr/local/bin/install-php-extensions \
-               https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions
+# Installation des dépendances système
+RUN apt-get update && apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release \
+    wget \
+    && curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/sury-php.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/sury-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury-php.list \
+    && apt-get update
 
-RUN chmod +x /usr/local/bin/install-php-extensions  \
-    && install-php-extensions $(cat /mnt/dependences.php) \
-    && rm -rf /usr/local/bin/install-php-extensions \
-    && rm -rf /mnt/dependences.php \
-    && echo "fr_FR.UTF-8 UTF-8" > /etc/locale.gen \
-    && locale-gen \
-    && echo "LC_ALL=fr_FR.UTF-8" > /etc/environment \
-    && a2enmod rewrite headers
+# Installation d'Apache, PHP et extensions
+RUN apt-get install -y \
+    apache2 \
+    php8.1 \
+    php8.1-cli \
+    php8.1-common \
+    php8.1-curl \
+    php8.1-gd \
+    php8.1-intl \
+    php8.1-ldap \
+    php8.1-mbstring \
+    php8.1-mysql \
+    php8.1-pgsql \
+    php8.1-soap \
+    php8.1-xml \
+    php8.1-xmlrpc \
+    php8.1-zip \
+    php8.1-bcmath \
+    php8.1-imagick \
+    libapache2-mod-php8.1 \
+    && a2enmod rewrite headers ssl
 
-## Application files
-RUN mkdir -p --mode=700 /var/www/html/MaarchCourrier /var/www/html/MaarchCourrier/custom /var/www/html/MaarchCourrier/tmp /opt/maarch/docservers \
-  && chown -R www-data:www-data /var/www/html/MaarchCourrier /opt/maarch/docservers
+# Installation de PostgreSQL client et autres dépendances
+RUN apt-get install -y \
+    postgresql-client \
+    git \
+    unzip \
+    cron \
+    supervisor \
+    # Nouvelles dépendances pour Maarch Courrier
+    wkhtmltopdf \
+    unoconv \
+    nmap \
+    ghostscript \
+    poppler-utils \
+    antiword \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Installation de Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Configuration d'Apache
+RUN sed -i 's/^ServerTokens.*/ServerTokens Prod/' /etc/apache2/conf-available/security.conf \
+    && sed -i 's/^ServerSignature.*/ServerSignature Off/' /etc/apache2/conf-available/security.conf \
+    && echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# Configuration PHP
+RUN sed -i 's/^;date.timezone =/date.timezone = Europe\/Paris/' /etc/php/8.1/apache2/php.ini \
+    && sed -i 's/^;date.timezone =/date.timezone = Europe\/Paris/' /etc/php/8.1/cli/php.ini \
+    && sed -i 's/^upload_max_filesize = .*/upload_max_filesize = 100M/' /etc/php/8.1/apache2/php.ini \
+    && sed -i 's/^post_max_size = .*/post_max_size = 100M/' /etc/php/8.1/apache2/php.ini \
+    && sed -i 's/^memory_limit = .*/memory_limit = 512M/' /etc/php/8.1/apache2/php.ini \
+    && sed -i 's/^max_execution_time = .*/max_execution_time = 300/' /etc/php/8.1/apache2/php.ini
+
+# Création des répertoires
+RUN mkdir -p /var/www/html/MaarchCourrier \
+    /opt/maarch/docservers \
+    /var/log/maarch \
+    /home/scripts \
+    && chown -R www-data:www-data /var/www/html/MaarchCourrier /opt/maarch/docservers /var/log/maarch
+
+# VirtualHost Apache pour MEM Courrier
+COPY apache-mem.conf /etc/apache2/sites-available/mem-courrier.conf
+RUN a2dissite 000-default.conf && a2ensite mem-courrier.conf
+
+# Scripts d'installation - COPIER TOUS LES SCRIPTS
+COPY docker-entrypoint.sh /home/scripts/
+COPY healthcheck.sh /home/scripts/
+COPY install-mem.sh /home/scripts/
+COPY install-opencapture.sh /home/scripts/
+RUN chmod +x /home/scripts/*.sh
+
+# Exposition des ports
+EXPOSE 80
 
 WORKDIR /var/www/html/MaarchCourrier
 
-## Openssl config
-COPY --chmod=644 container/openssl.cnf /etc/ssl/openssl.cnf
-
-# Apache vhost
-COPY container/default-vhost.conf /etc/apache2/sites-available/000-default.conf
-
-# PHP Configuration
-COPY container/php.ini /usr/local/etc/php/php.ini
-
-RUN mkdir -p /home/scripts
-COPY --chown=www-data:www-data container/initialize_app.sh /home/scripts/initialize_app.sh
-COPY --chown=www-data:www-data container/initialize_db.sh /home/scripts/initialize_db.sh
-RUN chmod +x /home/scripts/initialize_app.sh && chmod +x /home/scripts/initialize_db.sh
-
-# Set default healthcheck
-COPY --chown=root:root --chmod=500 container/healthcheck.sh /bin/healthcheck.sh
-
-# run cron in the background
-RUN sed -i 's/^exec /service cron start\n\nexec /' /usr/local/bin/apache2-foreground
-
-#
-# Base APP
-#
-
-# Copy the app files inside the container
-COPY --chown=www-data:www-data index.php LICENSE.txt CONTRIBUTING.md *.md .htaccess /var/www/html/MaarchCourrier/
-COPY --chown=www-data:www-data dist /var/www/html/MaarchCourrier/dist
-COPY --chown=www-data:www-data modules /var/www/html/MaarchCourrier/modules
-COPY --chown=www-data:www-data install /var/www/html/MaarchCourrier/install
-COPY --chown=www-data:www-data rest /var/www/html/MaarchCourrier/rest
-COPY --chown=www-data:www-data bin /var/www/html/MaarchCourrier/bin
-COPY --chown=www-data:www-data config /var/www/html/MaarchCourrier/config
-COPY --chown=www-data:www-data referential /var/www/html/MaarchCourrier/referential
-COPY --chown=www-data:www-data sql /var/www/html/MaarchCourrier/sql
-COPY --chown=www-data:www-data migration /var/www/html/MaarchCourrier/migration
-COPY --chown=www-data:www-data package.json package-lock.json composer.json composer.lock /var/www/html/MaarchCourrier/
-COPY --chown=www-data:www-data src/app /var/www/html/MaarchCourrier/src/app
-COPY --chown=www-data:www-data src/core /var/www/html/MaarchCourrier/src/core
-COPY --chown=www-data:www-data src/backend /var/www/html/MaarchCourrier/src/backend
-COPY --chown=www-data:www-data src/lang /var/www/html/MaarchCourrier/src/lang
-
-# Correct permissions
-RUN mkdir /var/www/html/MaarchCourrier/custom && chown -R www-data:www-data /var/www/html/MaarchCourrier/custom
-
-RUN find /var/www/html/MaarchCourrier -type d -exec chmod 770 {} + \
-    & find /var/www/html/MaarchCourrier -type f -exec chmod 660 {} + \
-    & chmod 770 /opt/maarch/docservers \
-    & chmod 440 /usr/local/etc/php/php.ini \
-    & wait
-
-# Set default entrypoint
-COPY --chown=root:www-data container/entrypoint.sh /bin/entrypoint.sh
-RUN chmod +x /bin/entrypoint.sh
-
-ENTRYPOINT ["/bin/entrypoint.sh"]
-CMD ["/usr/local/bin/apache2-foreground"]
+# Point d'entrée
+ENTRYPOINT ["/home/scripts/docker-entrypoint.sh"]
+CMD ["apache2-foreground"]
