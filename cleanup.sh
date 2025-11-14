@@ -9,7 +9,7 @@ echo -e "${YELLOW}🧹 Nettoyage du système...${NC}"
 
 # Supprimer les conteneurs arrêtés
 echo "Suppression des conteneurs arrêtés..."
-docker compose -p mc_24 -f compose.yml down
+docker-compose -p mc_24 -f docker-compose.yml down
 
 # Supprimer les images non utilisées
 echo "Nettoyage des images Docker..."

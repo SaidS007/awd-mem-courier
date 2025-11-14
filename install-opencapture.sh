@@ -102,14 +102,21 @@ done
 echo "📦 Installation d'Open-Capture for MEM..."
 cd $OPENCAPTURE_INSTALL_PATH
 
-# Rendre le script exécutable
-chmod ugo+x install.sh
-
 # Vérifier les permissions
 echo "🔐 Configuration des permissions..."
 chown -R www-data:www-data "$OPENCAPTURE_PATH"
 find "$OPENCAPTURE_PATH" -type d -exec chmod 755 {} \;
 find "$OPENCAPTURE_PATH" -type f -exec chmod 644 {} \;
+
+# Rendre le script exécutable
+chmod 755 install.sh
+
+# Vérifier que le script est exécutable
+if [ ! -x "install.sh" ]; then
+   ls -l "$OPENCAPTURE_INSTALL_PATH/install.sh"
+   echo "❌ Le script install.sh n'est pas exécutable"
+   exit 1
+fi
 
 # Installation non-interactive
 echo "🛠️ Lancement de l'installation..."

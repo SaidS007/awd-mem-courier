@@ -3,7 +3,7 @@ version: '3.8'
 services:
   db-mc:
     image: postgres:16-alpine
-    restart: unless-stopped
+    #restart: unless-stopped
     command: ["-c", "datestyle=iso,dmy"]
     volumes:
       - db-data:/var/lib/postgresql/data
