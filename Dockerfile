@@ -28,8 +28,8 @@ RUN chmod +x /usr/local/bin/install-php-extensions  \
 
 ## Application files
 RUN mkdir -p --mode=700 /var/www/html/MaarchCourrier /var/www/html/MaarchCourrier/dist /opt/maarch/docservers \
-  && chown www-data:www-data /var/www/html/MaarchCourrier /opt/maarch/docservers
-RUN touch /var/www/html/MaarchCourrier/dist/index.html
+  && touch /var/www/html/MaarchCourrier/dist/index.html \
+  && chown -R www-data:www-data /var/www/html/MaarchCourrier /opt/maarch/docservers
 
 WORKDIR /var/www/html/MaarchCourrier
 
