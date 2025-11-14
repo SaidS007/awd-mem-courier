@@ -27,8 +27,7 @@ RUN chmod +x /usr/local/bin/install-php-extensions  \
     && a2enmod rewrite headers
 
 ## Application files
-RUN mkdir -p --mode=700 /var/www/html/MaarchCourrier /var/www/html/MaarchCourrier/dist /opt/maarch/docservers \
-  && touch /var/www/html/MaarchCourrier/dist/index.html \
+RUN mkdir -p --mode=700 /var/www/html/MaarchCourrier /var/www/html/MaarchCourrier/custom /var/www/html/MaarchCourrier/tmp /opt/maarch/docservers \
   && chown -R www-data:www-data /var/www/html/MaarchCourrier /opt/maarch/docservers
 
 WORKDIR /var/www/html/MaarchCourrier
@@ -59,7 +58,7 @@ RUN sed -i 's/^exec /service cron start\n\nexec /' /usr/local/bin/apache2-foregr
 
 # Copy the app files inside the container
 COPY --chown=www-data:www-data index.php LICENSE.txt CONTRIBUTING.md *.md .htaccess /var/www/html/MaarchCourrier/
-COPY --chown=www-data:www-data .htaccess /var/www/html/MaarchCourrier/.htaccess
+COPY --chown=www-data:www-data dist /var/www/html/MaarchCourrier/dist
 COPY --chown=www-data:www-data modules /var/www/html/MaarchCourrier/modules
 COPY --chown=www-data:www-data install /var/www/html/MaarchCourrier/install
 COPY --chown=www-data:www-data rest /var/www/html/MaarchCourrier/rest
