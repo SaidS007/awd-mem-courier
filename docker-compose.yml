@@ -58,6 +58,7 @@ services:
       DB_NAME: ${DB_NAME:-mem}
       DB_USER: ${DB_USER:-memuser}
       DB_PASSWORD: ${DB_PASSWORD:-mempassword}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mempassword}
       
       # Configuration MEM
       MEM_VERSION: 2505

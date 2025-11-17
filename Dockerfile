@@ -3,6 +3,7 @@ FROM debian:bookworm-slim
 # Variables d'environnement
 ENV DEBIAN_FRONTEND=noninteractive
 ENV MEM_VERSION=2505
+ENV TERM=xterm
 
 # Installation des dépendances système
 RUN apt-get update && apt-get install -y \
@@ -52,6 +53,13 @@ RUN apt-get install -y \
     ghostscript \
     poppler-utils \
     antiword \
+    # Dépendances pour Open-Capture
+    crudini \
+    sudo \
+    expect \
+    postgresql \
+    python3-pip \
+    python3-venv \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -87,7 +95,7 @@ COPY docker-entrypoint.sh /home/scripts/
 COPY healthcheck.sh /home/scripts/
 COPY install-mem.sh /home/scripts/
 COPY install-opencapture.sh /home/scripts/
-RUN chmod 755 /home/scripts/*.sh
+RUN chmod +x /home/scripts/*.sh
 
 # Exposition des ports
 EXPOSE 80
