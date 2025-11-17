@@ -49,42 +49,61 @@ fi
 # Vérifier si le code source est présent
 if [ ! -f "$OPENCAPTURE_INSTALL_PATH/install.sh" ]; then
     echo "❌ Open-Capture n'est pas téléchargé"
-    echo "📥 Téléchargement de la version globale..."
+    echo "📥 Téléchargement de l'archive ZIP..."
     
     # Créer le répertoire si nécessaire
     mkdir -p $OPENCAPTURE_PATH
     
-    # Télécharger depuis Git (version globale)
+    # Télécharger l'archive ZIP
     cd /tmp
     
-    # NETTOYAGE : Supprimer le dossier temporaire s'il existe
-    if [ -d "opencapture_temp" ]; then
-        echo "🧹 Nettoyage du dossier temporaire existant..."
-        rm -rf opencapture_temp
+    # NETTOYAGE : Supprimer les fichiers temporaires s'ils existent
+    if [ -f "opencapture-master.zip" ]; then
+        echo "🧹 Nettoyage de l'archive existante..."
+        rm -f opencapture-master.zip
     fi
     
-    echo "🌐 Clonage du repository Open-Capture global..."
-    git clone https://github.com/edissyum/opencapture.git opencapture_temp
+    if [ -d "opencapture-master" ]; then
+        echo "🧹 Nettoyage du dossier temporaire existant..."
+        rm -rf opencapture-master
+    fi
     
-    # Vérifier que le clone a réussi
-    if [ ! -d "opencapture_temp" ]; then
-        echo "❌ Échec du clonage"
+    echo "🌐 Téléchargement de l'archive Open-Capture..."
+    wget -q https://github.com/edissyum/opencapture/archive/refs/heads/master.zip -O opencapture-master.zip
+    
+    # Vérifier que le téléchargement a réussi
+    if [ ! -f "opencapture-master.zip" ]; then
+        echo "❌ Échec du téléchargement"
+        exit 1
+    fi
+    
+    echo "📦 Extraction de l'archive..."
+    unzip -q opencapture-master.zip
+    
+    # Vérifier que l'extraction a réussi
+    if [ ! -d "opencapture-master" ]; then
+        echo "❌ Échec de l'extraction"
+        rm -f opencapture-master.zip
         exit 1
     fi
     
     echo "📁 Copie des fichiers..."
-    cp -r opencapture_temp/* $OPENCAPTURE_PATH/
-    cp -r opencapture_temp/.* $OPENCAPTURE_PATH/ 2>/dev/null || true
+    cp -r opencapture-master/* $OPENCAPTURE_PATH/
+    cp -r opencapture-master/.* $OPENCAPTURE_PATH/ 2>/dev/null || true
     
     # Nettoyer
-    rm -rf opencapture_temp
+    echo "🧹 Nettoyage des fichiers temporaires..."
+    rm -f opencapture-master.zip
+    rm -rf opencapture-master
     
     if [ ! -f "$OPENCAPTURE_INSTALL_PATH/install.sh" ]; then
-        echo "❌ Échec du téléchargement - fichier install.sh manquant"
+        echo "❌ Échec de l'installation - fichier install.sh manquant"
+        echo "📁 Contenu du répertoire $OPENCAPTURE_PATH :"
+        ls -la "$OPENCAPTURE_PATH"
         exit 1
     fi
     
-    echo "✅ Open-Capture global téléchargé"
+    echo "✅ Open-Capture téléchargé et extrait"
 fi
 
 # Attendre que la base de données soit prête
@@ -123,7 +142,7 @@ if [ ! -x "install.sh" ]; then
 fi
 
 # Installation non-interactive avec tous les paramètres requis
-echo "🛠️ Lancement de l'installation d'Open-Capture global..."
+echo "🛠️ Lancement de l'installation d'Open-Capture..."
 ./install.sh \
     --user www-data \
     --custom_id "$CUSTOM_ID" \
