@@ -60,9 +60,29 @@ RUN apt-get install -y \
     postgresql \
     python3-pip \
     python3-venv \
+    # Installation minimale de LibreOffice
+    libreoffice \
+    libreoffice-writer \
+    libreoffice-calc \
+    libreoffice-java-common \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
+    && rm -rf /var/lib/apt/lists/* \
+    # Nettoyage des fichiers inutiles de LibreOffice
+    && rm -rf /usr/lib/libreoffice/share/gallery \
+    && rm -rf /usr/lib/libreoffice/share/templates \
+    && rm -rf /usr/lib/libreoffice/share/config/images \
+    && find /usr/lib/libreoffice -name "*.ui" -delete \
+    && find /usr/lib/libreoffice -name "*.png" -delete \
+    && find /usr/lib/libreoffice -name "*.jpg" -delete \
+    && apt-get clean 
+    
+# Configuration de unoconv
+RUN mkdir -p /var/www/.config \
+    && chown -R www-data:www-data /var/www/.config \
+    && sudo -u www-data unoconv --listener & \
+    && sleep 5 \
+    && pkill unoconv
+    
 # Installation de Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
@@ -80,7 +100,7 @@ RUN sed -i 's/^;date.timezone =/date.timezone = Europe\/Paris/' /etc/php/8.1/apa
     && sed -i 's/^max_execution_time = .*/max_execution_time = 300/' /etc/php/8.1/apache2/php.ini
 
 # Création des répertoires
-RUN mkdir -p /var/www/html/MaarchCourrier \
+RUN mkdir -p /var/www/html/MaarchCourrier/custom \
     /opt/maarch/docservers \
     /var/log/maarch \
     /home/scripts \

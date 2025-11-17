@@ -4,6 +4,7 @@ set -e
 echo "🚀 Installation d'Open-Capture..."
 
 # Variables
+MEM_PATH=${MEM_PATH:-/var/www/html/MaarchCourrier}
 OPENCAPTURE_PATH=${OPENCAPTURE_PATH:-/var/www/html/opencapture}
 OPENCAPTURE_INSTALL_PATH="$OPENCAPTURE_PATH/install"
 CUSTOM_ID=${CUSTOM_ID:-mycompany}
@@ -113,6 +114,9 @@ cd $OPENCAPTURE_INSTALL_PATH
 # Vérifier les permissions
 echo "🔐 Configuration des permissions..."
 chown -R www-data:www-data "$OPENCAPTURE_PATH"
+chown -R www-data:www-data "$DOCSERVERS_PATH"
+chown -R www-data:www-data "$SHARE_PATH"
+chmod -R 775 "$DOCSERVERS_PATH" "$SHARE_PATH"
 find "$OPENCAPTURE_PATH" -type d -exec chmod 755 {} \;
 find "$OPENCAPTURE_PATH" -type f -exec chmod 644 {} \;
 
@@ -129,8 +133,8 @@ if [ -d "$OPENCAPTURE_PATH/custom/$CUSTOM_ID" ]; then
     
     # Configuration des permissions finales
     echo "🔐 Configuration finale des permissions..."
-    chown -R www-data:www-data "$OPENCAPTURE_PATH" "$DOCSERVERS_PATH" "$SHARE_PATH"
-    chmod -R 775 "$OPENCAPTURE_PATH" "$DOCSERVERS_PATH" "$SHARE_PATH"
+    chown -R www-data:www-data "$MEM_PATH" "$OPENCAPTURE_PATH" "$DOCSERVERS_PATH" "$SHARE_PATH"
+    chmod -R 775 "$MEM_PATH" "$OPENCAPTURE_PATH" "$DOCSERVERS_PATH" "$SHARE_PATH"
     
     echo "🌐 Accès: http://localhost:\${APP_PORT:-8080}/opencapture"
     echo "🔑 Identifiants par défaut: admin / admin"

@@ -21,7 +21,7 @@ docker network prune -f
 
 # Nettoyer le cache système
 echo "Nettoyage du cache système..."
-sudo apt-get clean
-sudo apt-get autoremove -y
+#sudo apt-get clean
+#sudo apt-get autoremove -y
 
 echo -e "${BLUE}✅ Nettoyage terminé!${NC}"
