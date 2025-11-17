@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Installation d'Open-Capture for MEM..."
+echo "🚀 Installation d'Open-Capture..."
 
 # Variables
 OPENCAPTURE_PATH=${OPENCAPTURE_PATH:-/var/www/html/opencapture}
@@ -12,6 +12,9 @@ DB_PORT=${DB_PORT:-5432}
 DB_NAME=${DB_NAME:-mem}
 DB_USER=${DB_USER:-memuser}
 DB_PASSWORD=${DB_PASSWORD:-mempassword}
+DOCSERVERS_PATH=${DOCSERVERS_PATH:-/var/docservers/opencapture}
+PYTHON_VENV_PATH=${PYTHON_VENV_PATH:-/home/www-data/python-venv/opencapture}
+SHARE_PATH=${SHARE_PATH:-/var/share}
 
 # Vérifier si Open-Capture est déjà installé
 if [ -f "$OPENCAPTURE_INSTALL_PATH/install.sh" ] && [ -d "$OPENCAPTURE_PATH/custom/$CUSTOM_ID" ]; then
@@ -19,18 +22,18 @@ if [ -f "$OPENCAPTURE_INSTALL_PATH/install.sh" ] && [ -d "$OPENCAPTURE_PATH/cust
     echo "🔧 Vérification de la configuration..."
     
     # Vérifier que les services sont actifs
-    if systemctl is-active --quiet OCVerifier-worker_$CUSTOM_ID.service 2>/dev/null; then
+    if systemctl is-active --quiet "OCVerifier-worker_$CUSTOM_ID.service" 2>/dev/null; then
         echo "✅ Service OCVerifier actif"
     else
         echo "🔄 Démarrage du service OCVerifier..."
-        systemctl start OCVerifier-worker_$CUSTOM_ID.service 2>/dev/null || true
+        systemctl start "OCVerifier-worker_$CUSTOM_ID.service" 2>/dev/null || true
     fi
     
-    if systemctl is-active --quiet OCSplitter-worker_$CUSTOM_ID.service 2>/dev/null; then
+    if systemctl is-active --quiet "OCSplitter-worker_$CUSTOM_ID.service" 2>/dev/null; then
         echo "✅ Service OCSplitter actif"
     else
         echo "🔄 Démarrage du service OCSplitter..."
-        systemctl start OCSplitter-worker_$CUSTOM_ID.service 2>/dev/null || true
+        systemctl start "OCSplitter-worker_$CUSTOM_ID.service" 2>/dev/null || true
     fi
     
     if systemctl is-active --quiet fs-watcher.service 2>/dev/null; then
@@ -46,12 +49,12 @@ fi
 # Vérifier si le code source est présent
 if [ ! -f "$OPENCAPTURE_INSTALL_PATH/install.sh" ]; then
     echo "❌ Open-Capture n'est pas téléchargé"
-    echo "📥 Téléchargement en cours..."
+    echo "📥 Téléchargement de la version globale..."
     
     # Créer le répertoire si nécessaire
     mkdir -p $OPENCAPTURE_PATH
     
-    # Télécharger depuis Git
+    # Télécharger depuis Git (version globale)
     cd /tmp
     
     # NETTOYAGE : Supprimer le dossier temporaire s'il existe
@@ -60,8 +63,8 @@ if [ ! -f "$OPENCAPTURE_INSTALL_PATH/install.sh" ]; then
         rm -rf opencapture_temp
     fi
     
-    echo "🌐 Clonage du repository Open-Capture..."
-    git clone https://github.com/edissyum/opencaptureformem.git opencapture_temp
+    echo "🌐 Clonage du repository Open-Capture global..."
+    git clone https://github.com/edissyum/opencapture.git opencapture_temp
     
     # Vérifier que le clone a réussi
     if [ ! -d "opencapture_temp" ]; then
@@ -81,7 +84,7 @@ if [ ! -f "$OPENCAPTURE_INSTALL_PATH/install.sh" ]; then
         exit 1
     fi
     
-    echo "✅ Open-Capture téléchargé"
+    echo "✅ Open-Capture global téléchargé"
 fi
 
 # Attendre que la base de données soit prête
@@ -99,7 +102,7 @@ for i in {1..30}; do
 done
 
 # Installer Open-Capture
-echo "📦 Installation d'Open-Capture for MEM..."
+echo "📦 Installation d'Open-Capture..."
 cd $OPENCAPTURE_INSTALL_PATH
 
 # Vérifier les permissions
@@ -108,36 +111,37 @@ chown -R www-data:www-data "$OPENCAPTURE_PATH"
 find "$OPENCAPTURE_PATH" -type d -exec chmod 755 {} \;
 find "$OPENCAPTURE_PATH" -type f -exec chmod 644 {} \;
 
-# Rendre le script exécutable
-chmod 755 install.sh
+# Rendre le script d'installation exécutable
+echo "🔧 Préparation du script d'installation..."
+chmod +x install.sh
 
 # Vérifier que le script est exécutable
 if [ ! -x "install.sh" ]; then
-   ls -l "$OPENCAPTURE_INSTALL_PATH/install.sh"
-   echo "❌ Le script install.sh n'est pas exécutable"
-   exit 1
+    echo "❌ Le script install.sh n'est pas exécutable après chmod"
+    ls -la install.sh
+    exit 1
 fi
 
-# Installation non-interactive
-echo "🛠️ Lancement de l'installation..."
+# Installation non-interactive avec tous les paramètres requis
+echo "🛠️ Lancement de l'installation d'Open-Capture global..."
 ./install.sh \
     --user www-data \
-    --custom_id $CUSTOM_ID \
+    --custom_id "$CUSTOM_ID" \
     --supervisor_systemd systemd \
-    --path $OPENCAPTURE_PATH \
-    --database_hostname $DB_HOST \
-    --database_port $DB_PORT \
-    --database_username $DB_USER \
-    --database_password $DB_PASSWORD \
-    --database_name $DB_NAME \
-    --docserver_path /var/docservers/opencapture \
-    --python_venv_path /home/www-data/python-venv/opencapture \
-    --share_path /var/share \
-    --mem_path /var/www/html/MaarchCourrier
+    --path "$OPENCAPTURE_PATH" \
+    --wsgi_threads 5 \
+    --wsgi_process 1 \
+    --database_hostname "$DB_HOST" \
+    --database_port "$DB_PORT" \
+    --database_username "$DB_USER" \
+    --database_password "$DB_PASSWORD" \
+    --docserver_path "$DOCSERVERS_PATH" \
+    --python_venv_path "$PYTHON_VENV_PATH" \
+    --share_path "$SHARE_PATH"
 
 # Vérifier l'installation
 if [ -d "$OPENCAPTURE_PATH/custom/$CUSTOM_ID" ]; then
-    echo "✅ Open-Capture for MEM installé avec succès"
+    echo "✅ Open-Capture installé avec succès"
     
     # Démarrer les services
     echo "🔧 Démarrage des services..."
@@ -145,20 +149,34 @@ if [ -d "$OPENCAPTURE_PATH/custom/$CUSTOM_ID" ]; then
     
     # Activer et démarrer les services si systemd est disponible
     if command -v systemctl >/dev/null; then
-        systemctl enable OCVerifier-worker_$CUSTOM_ID.service 2>/dev/null || true
-        systemctl enable OCSplitter-worker_$CUSTOM_ID.service 2>/dev/null || true
+        systemctl enable "OCVerifier-worker_$CUSTOM_ID.service" 2>/dev/null || true
+        systemctl enable "OCSplitter-worker_$CUSTOM_ID.service" 2>/dev/null || true
         systemctl enable fs-watcher.service 2>/dev/null || true
         
-        systemctl start OCVerifier-worker_$CUSTOM_ID.service 2>/dev/null || true
-        systemctl start OCSplitter-worker_$CUSTOM_ID.service 2>/dev/null || true
+        systemctl start "OCVerifier-worker_$CUSTOM_ID.service" 2>/dev/null || true
+        systemctl start "OCSplitter-worker_$CUSTOM_ID.service" 2>/dev/null || true
         systemctl start fs-watcher.service 2>/dev/null || true
+        
+        echo "✅ Services Open-Capture démarrés"
     fi
     
+    # Configuration des permissions finales
+    echo "🔐 Configuration finale des permissions..."
+    chown -R www-data:www-data "$OPENCAPTURE_PATH"
+    chown -R www-data:www-data "$DOCSERVERS_PATH"
+    chown -R www-data:www-data "$SHARE_PATH"
+    chmod -R 775 "$OPENCAPTURE_PATH" "$DOCSERVERS_PATH" "$SHARE_PATH"
+    
     echo "🌐 Accès: http://localhost:${APP_PORT:-8080}/opencapture"
-    echo "🔑 Identifiants: admin / admin"
+    echo "🔑 Identifiants par défaut: admin / admin"
     echo "📁 Données persistées dans les volumes Docker"
+    echo ""
+    echo "⚠️  IMPORTANT: Après la première connexion, changez le mot de passe admin !"
 else
     echo "❌ Erreur lors de l'installation - le custom directory n'a pas été créé"
-    echo "📋 Vérifiez les logs dans $OPENCAPTURE_PATH/install.log"
+    echo "📋 Vérifiez les logs dans:"
+    echo "   - $OPENCAPTURE_PATH/install_info.log" 
+    echo "   - $OPENCAPTURE_PATH/install_error.log"
+    echo "🔍 Logs système: journalctl -u OCVerifier-worker_$CUSTOM_ID.service"
     exit 1
 fi

@@ -3,7 +3,8 @@ version: '3.8'
 services:
   db-mc:
     image: postgres:16-alpine
-    restart: unless-stopped
+    container_name: db-mc
+    #restart: unless-stopped
     command: ["-c", "datestyle=iso,dmy"]
     volumes:
       - db-data:/var/lib/postgresql/data
@@ -20,12 +21,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - mem-opencapture-net
 
   app-mc:
     build:
       context: .
       dockerfile: Dockerfile
-    restart: unless-stopped
+    container_name: app-mc-opencap
+    #restart: unless-stopped
     #healthcheck:
     #  test: ["CMD", "/home/scripts/healthcheck.sh"]
     #  interval: 30s
@@ -73,6 +77,8 @@ services:
     depends_on:
       db-mc:
         condition: service_healthy
+    networks:
+      - mem-opencapture-net
 
 volumes:
   # Volumes pour MEM Courrier
@@ -86,3 +92,7 @@ volumes:
   opencapture-docservers:
   opencapture-share:
   opencapture-logs:
+  
+networks:
+  mem-opencapture-net:
+    driver: bridge

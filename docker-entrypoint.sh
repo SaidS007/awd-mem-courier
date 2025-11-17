@@ -54,3 +54,5 @@ fi
 # Garder le conteneur actif
 echo "📝 Surveillance des logs..."
 exec tail -f /var/log/apache2/*.log
+apache2-foreground
+

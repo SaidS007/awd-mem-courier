@@ -87,7 +87,7 @@ COPY docker-entrypoint.sh /home/scripts/
 COPY healthcheck.sh /home/scripts/
 COPY install-mem.sh /home/scripts/
 COPY install-opencapture.sh /home/scripts/
-RUN chmod +x /home/scripts/*.sh
+RUN chmod 755 /home/scripts/*.sh
 
 # Exposition des ports
 EXPOSE 80
