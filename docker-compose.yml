@@ -25,9 +25,10 @@ services:
       - mem-opencapture-net
 
   app-mc:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    #build:
+    #  context: .
+    #  dockerfile: Dockerfile
+    image: lucky00700/awd-mc:latest
     container_name: app-mc-opencap
     #restart: unless-stopped
     #healthcheck:

@@ -71,7 +71,7 @@ docker-compose -p mc_24 -f docker-compose.yml down 2>/dev/null || true
 # Créer les répertoires
 print_info "Création des répertoires..."
 mkdir -p custom cron.d sql
-sudo chmod 755 custom cron.d sql
+#sudo chmod 755 custom cron.d sql
 
 # Construction des images
 print_info "Construction des images..."

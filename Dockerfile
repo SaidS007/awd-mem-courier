@@ -79,9 +79,9 @@ RUN apt-get install -y \
 # Configuration de unoconv
 RUN mkdir -p /var/www/.config \
     && chown -R www-data:www-data /var/www/.config \
-    && sudo -u www-data unoconv --listener & \
-    && sleep 5 \
-    && pkill unoconv
+    && sudo -u www-data unoconv --listener & 
+#    && sleep 5 \
+#    && pkill unoconv
     
 # Installation de Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
