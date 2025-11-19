@@ -4,7 +4,7 @@ services:
   db-mc:
     image: postgres:16-alpine
     container_name: db-mc
-    #restart: unless-stopped
+    restart: unless-stopped
     command: ["-c", "datestyle=iso,dmy"]
     volumes:
       - db-data:/var/lib/postgresql/data
@@ -30,7 +30,7 @@ services:
     #  dockerfile: Dockerfile
     image: lucky00700/awd-mc:latest
     container_name: app-mc-opencap
-    #restart: unless-stopped
+    restart: unless-stopped
     #healthcheck:
     #  test: ["CMD", "/home/scripts/healthcheck.sh"]
     #  interval: 30s
